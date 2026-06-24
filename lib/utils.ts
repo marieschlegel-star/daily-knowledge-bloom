@@ -41,6 +41,17 @@ export function formatDuration(hours: number): string {
   return `${h}h ${m}min`;
 }
 
+/** Local datetime string without UTC shift (Notion + FullCalendar). */
+export function toLocalISO(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
+}
+
+export function toDateOnly(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 export function priorityColor(priority: string | null): string {
   switch (priority) {
     case "High": return "text-red-500";

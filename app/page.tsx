@@ -11,8 +11,9 @@ import { RightSidebar } from "@/components/right-sidebar";
 import { CalendarViewComponent } from "@/components/calendar-view";
 import { Topbar } from "@/components/topbar";
 import { SessionPanel } from "@/components/session-panel";
-import { QuickCreateModal } from "@/components/quick-create-modal";
+import { QuickCreateModal, type QuickCreatePayload } from "@/components/quick-create-modal";
 import { useAppStore } from "@/lib/store";
+import { toLocalISO, toDateOnly } from "@/lib/utils";
 import {
   DUMMY_SESSIONS,
   DUMMY_KLAUSUREN,
@@ -27,7 +28,7 @@ const USE_NOTION = process.env.NEXT_PUBLIC_USE_NOTION === "true";
 export default function HomePage() {
   const calRef = useRef<FullCalendar>(null);
   const qc = useQueryClient();
-  const { selectedSessionId, setSelectedSessionId, calendarView } = useAppStore();
+  const { selectedSessionId, setSelectedSessionId, calendarView, filters, toggleFach, toggleTodoKategorie } = useAppStore();
   const [calTitle, setCalTitle] = useState("KW 26 · Juni 2026");
   const [quickCreate, setQuickCreate] = useState<{ date: Date; allDay: boolean } | null>(null);
 
@@ -39,6 +40,7 @@ export default function HomePage() {
       const res = await fetch("/api/notion/sessions");
       return res.ok ? res.json() : DUMMY_SESSIONS;
     },
+    staleTime: USE_NOTION ? 0 : Infinity,
   });
 
   const { data: klausuren = DUMMY_KLAUSUREN } = useQuery<Klausur[]>({
@@ -48,6 +50,7 @@ export default function HomePage() {
       const res = await fetch("/api/notion/klausuren");
       return res.ok ? res.json() : DUMMY_KLAUSUREN;
     },
+    staleTime: USE_NOTION ? 0 : Infinity,
   });
 
   const { data: todos = DUMMY_TODOS } = useQuery<Todo[]>({
@@ -57,6 +60,7 @@ export default function HomePage() {
       const res = await fetch("/api/notion/todos");
       return res.ok ? res.json() : DUMMY_TODOS;
     },
+    staleTime: USE_NOTION ? 0 : Infinity,
   });
 
   const gcalEvents: GCalEvent[] = [];
@@ -133,6 +137,123 @@ export default function HomePage() {
     setQuickCreate({ date, allDay });
   }, []);
 
+  const handleQuickCreate = useCallback(
+    async (payload: QuickCreatePayload): Promise<{ ok: boolean; error?: string }> => {
+      if (payload.type === "todo") {
+        const dateStr = payload.allDay ? toDateOnly(payload.slotDate) : toLocalISO(payload.slotDate);
+
+        if (USE_NOTION) {
+          const res = await fetch("/api/notion/todos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: payload.name, date: dateStr, kategorie: payload.kategorie }),
+          });
+          const body = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            return { ok: false, error: body.error ?? "To-Do konnte nicht gespeichert werden." };
+          }
+          const newTodo: Todo = {
+            id: body.id ?? `local-${Date.now()}`,
+            name: payload.name,
+            date: dateStr,
+            completed: false,
+            kategorie: payload.kategorie,
+            kat: null,
+            lernplanIds: [],
+          };
+          qc.setQueryData<Todo[]>(["todos"], (old) => [...(old ?? []), newTodo]);
+          qc.invalidateQueries({ queryKey: ["todos"] });
+        } else {
+          const newTodo: Todo = {
+            id: `local-todo-${Date.now()}`,
+            name: payload.name,
+            date: dateStr,
+            completed: false,
+            kategorie: payload.kategorie,
+            kat: null,
+            lernplanIds: [],
+          };
+          qc.setQueryData<Todo[]>(["todos"], (old) => [...(old ?? []), newTodo]);
+        }
+
+        if (!filters.todoKategorien.includes(payload.kategorie)) {
+          toggleTodoKategorie(payload.kategorie);
+        }
+
+        return { ok: true };
+      }
+
+      const dateStr = toLocalISO(payload.slotDate);
+      const duration = payload.duration;
+
+      if (USE_NOTION) {
+        const res = await fetch("/api/notion/sessions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: payload.title,
+            date: dateStr,
+            subject: payload.subject,
+            duration,
+          }),
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          return { ok: false, error: body.error ?? "Lerneinheit konnte nicht gespeichert werden." };
+        }
+        const newSession: LernSession = {
+          id: body.id ?? `local-${Date.now()}`,
+          title: payload.title,
+          subject: payload.subject,
+          date: dateStr,
+          duration,
+          status: [],
+          priority: "Medium",
+          examensrelevanz: [],
+          completed: false,
+          wiederholungen: 0,
+          klausurenIds: [],
+          pomodoroIds: [],
+          todoIds: [],
+          parentId: null,
+          subIds: [],
+          unterlagen: [],
+          lernTodos: "",
+        };
+        qc.setQueryData<LernSession[]>(["sessions"], (old) => [...(old ?? []), newSession]);
+        qc.invalidateQueries({ queryKey: ["sessions"] });
+      } else {
+        const newSession: LernSession = {
+          id: `local-session-${Date.now()}`,
+          title: payload.title,
+          subject: payload.subject,
+          date: dateStr,
+          duration,
+          status: [],
+          priority: "Medium",
+          examensrelevanz: [],
+          completed: false,
+          wiederholungen: 0,
+          klausurenIds: [],
+          pomodoroIds: [],
+          todoIds: [],
+          parentId: null,
+          subIds: [],
+          unterlagen: [],
+          lernTodos: "",
+        };
+        qc.setQueryData<LernSession[]>(["sessions"], (old) => [...(old ?? []), newSession]);
+      }
+
+      if (!filters.faecher.includes(payload.subject)) {
+        toggleFach(payload.subject);
+      }
+
+      return { ok: true };
+    },
+    [qc, filters.faecher, filters.todoKategorien, toggleFach, toggleTodoKategorie]
+  );
+
   const selectedSession = sessions.find((s) => s.id === selectedSessionId) ?? null;
 
   return (
@@ -184,11 +305,9 @@ export default function HomePage() {
         <QuickCreateModal
           date={quickCreate.date}
           allDay={quickCreate.allDay}
+          calendarView={calendarView}
           onClose={() => setQuickCreate(null)}
-          onCreated={() => {
-            qc.invalidateQueries({ queryKey: ["sessions"] });
-            qc.invalidateQueries({ queryKey: ["todos"] });
-          }}
+          onCreate={handleQuickCreate}
         />
       )}
     </div>

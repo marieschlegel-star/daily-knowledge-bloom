@@ -12,65 +12,100 @@ const ALL_KATEGORIEN: TodoKategorie[] = ["Lernen", "KK", "AssK", "AG"];
 
 type CreateType = "lerneinheit" | "todo" | "termin";
 
+export type QuickCreatePayload =
+  | {
+      type: "lerneinheit" | "termin";
+      title: string;
+      slotDate: Date;
+      subject: Fach;
+      duration: number;
+    }
+  | {
+      type: "todo";
+      name: string;
+      slotDate: Date;
+      allDay: boolean;
+      kategorie: TodoKategorie;
+    };
+
 interface QuickCreateModalProps {
   date: Date;
   allDay: boolean;
+  calendarView?: string;
   onClose: () => void;
-  onCreated: () => void;
+  onCreate: (payload: QuickCreatePayload) => Promise<{ ok: boolean; error?: string }>;
 }
 
-export function QuickCreateModal({ date, allDay, onClose, onCreated }: QuickCreateModalProps) {
-  const [type, setType] = useState<CreateType>("lerneinheit");
+function suggestedType(allDay: boolean, view?: string): CreateType {
+  if (allDay || view === "dayGridMonth") return "todo";
+  return "lerneinheit";
+}
+
+const TYPE_HINTS: Record<CreateType, string> = {
+  lerneinheit: "Lernblock im Kalender einplanen",
+  todo: "Aufgabe mit Fälligkeitsdatum",
+  termin: "Termin (1 h) im Kalender",
+};
+
+function applyTime(base: Date, time: string): Date {
+  const [h, m] = time.split(":").map(Number);
+  const next = new Date(base);
+  next.setHours(h, m, 0, 0);
+  return next;
+}
+
+export function QuickCreateModal({ date, allDay, calendarView, onClose, onCreate }: QuickCreateModalProps) {
+  const [type, setType] = useState<CreateType>(() => suggestedType(allDay, calendarView));
   const [title, setTitle] = useState("");
   const [fach, setFach] = useState<Fach>("ZPO");
   const [duration, setDuration] = useState(1);
   const [kategorie, setKategorie] = useState<TodoKategorie>("Lernen");
+  const [time, setTime] = useState(format(date, "HH:mm"));
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const slotDate = allDay ? date : applyTime(date, time);
 
   useEffect(() => {
     inputRef.current?.focus();
   }, [type]);
 
-  // Close on Escape
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
 
   const dateLabel = allDay
-    ? format(date, "eeee, d. MMMM", { locale: de })
-    : format(date, "eeee, d. MMMM · HH:mm 'Uhr'", { locale: de });
+    ? format(slotDate, "eeee, d. MMMM", { locale: de })
+    : format(slotDate, "eeee, d. MMMM · HH:mm 'Uhr'", { locale: de });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
     setLoading(true);
-    try {
-      if (type === "lerneinheit" || type === "termin") {
-        await fetch("/api/notion/sessions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+    setError(null);
+
+    const payload: QuickCreatePayload =
+      type === "todo"
+        ? { type: "todo", name: title.trim(), slotDate, allDay, kategorie }
+        : {
+            type,
             title: title.trim(),
-            date: date.toISOString(),
+            slotDate,
             subject: fach,
             duration: type === "termin" ? 1 : duration,
-          }),
-        });
-      } else {
-        await fetch("/api/notion/todos", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: title.trim(),
-            date: allDay ? date.toISOString().split("T")[0] : date.toISOString(),
-            kategorie,
-          }),
-        });
+          };
+
+    try {
+      const result = await onCreate(payload);
+      if (!result.ok) {
+        setError(result.error ?? "Erstellen fehlgeschlagen. Bitte erneut versuchen.");
+        return;
       }
-      onCreated();
       onClose();
     } finally {
       setLoading(false);
@@ -79,27 +114,29 @@ export function QuickCreateModal({ date, allDay, onClose, onCreated }: QuickCrea
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" onClick={onClose} />
 
-      {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-[320px] border border-border overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 pt-4 pb-2">
-          <p className="text-[11px] font-medium text-muted-foreground">{dateLabel}</p>
+      <div
+        className="relative bg-white rounded-2xl shadow-2xl w-[340px] border border-border overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-4 pt-4 pb-1">
+          <div>
+            <p className="text-[11px] font-medium text-muted-foreground">{dateLabel}</p>
+            <p className="text-[10px] text-muted-foreground/80 mt-0.5">{TYPE_HINTS[type]}</p>
+          </div>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
             <X className="h-3.5 w-3.5" />
           </button>
         </div>
 
-        {/* Type tabs */}
-        <div className="px-4 mb-3">
+        <div className="px-4 mb-3 mt-2">
           <div className="flex gap-1 bg-slate-100 rounded-xl p-0.5">
             {(["lerneinheit", "todo", "termin"] as CreateType[]).map((t) => (
               <button
                 key={t}
                 type="button"
-                onClick={() => setType(t)}
+                onClick={() => { setType(t); setError(null); }}
                 className={`flex-1 text-[11px] font-medium py-1.5 rounded-lg transition-all ${
                   type === t
                     ? "bg-white shadow-sm text-foreground"
@@ -113,7 +150,12 @@ export function QuickCreateModal({ date, allDay, onClose, onCreated }: QuickCrea
         </div>
 
         <form onSubmit={handleSubmit} className="px-4 pb-4 space-y-3">
-          {/* Title input */}
+          {error && (
+            <p className="text-[11px] text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+              {error}
+            </p>
+          )}
+
           <input
             ref={inputRef}
             value={title}
@@ -126,7 +168,19 @@ export function QuickCreateModal({ date, allDay, onClose, onCreated }: QuickCrea
             className="w-full text-sm px-3 py-2.5 rounded-xl border border-border bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
 
-          {/* Fach selector */}
+          {!allDay && type !== "todo" && (
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-muted-foreground shrink-0">Uhrzeit:</span>
+              <input
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                step={300}
+                className="flex-1 text-xs px-2 py-1.5 rounded-lg border border-border bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+          )}
+
           {(type === "lerneinheit" || type === "termin") && (
             <div className="flex flex-wrap gap-1">
               {ALL_FAECHER.map((f) => {
@@ -150,11 +204,10 @@ export function QuickCreateModal({ date, allDay, onClose, onCreated }: QuickCrea
             </div>
           )}
 
-          {/* Duration (Lerneinheit only) */}
           {type === "lerneinheit" && (
             <div className="flex items-center gap-2">
               <span className="text-[10px] text-muted-foreground shrink-0">Dauer:</span>
-              <div className="flex gap-1">
+              <div className="flex gap-1 flex-wrap">
                 {[0.5, 1, 1.5, 2, 3].map((d) => (
                   <button
                     key={d}
@@ -173,7 +226,6 @@ export function QuickCreateModal({ date, allDay, onClose, onCreated }: QuickCrea
             </div>
           )}
 
-          {/* Kategorie (To-Do only) */}
           {type === "todo" && (
             <div className="flex gap-1 flex-wrap">
               {ALL_KATEGORIEN.map((k) => (
@@ -193,14 +245,14 @@ export function QuickCreateModal({ date, allDay, onClose, onCreated }: QuickCrea
             </div>
           )}
 
-          {/* Submit */}
           <button
             type="submit"
             disabled={loading || !title.trim()}
             className="w-full py-2 bg-primary text-white text-xs font-semibold rounded-xl hover:bg-primary/90 disabled:opacity-40 transition-all"
           >
-            {loading ? "Wird erstellt..." : "Erstellen →"}
+            {loading ? "Wird erstellt..." : "Erstellen"}
           </button>
+          <p className="text-[9px] text-center text-muted-foreground">Enter zum Erstellen · Esc zum Schließen</p>
         </form>
       </div>
     </div>
