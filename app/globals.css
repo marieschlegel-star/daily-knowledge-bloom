@@ -93,7 +93,12 @@
 }
 
 .fc .fc-timegrid-slot {
-  height: 56px;
+  height: 14px; /* 15-min slots × 4 = 56px/h wie Google Calendar */
+}
+
+.fc .fc-timegrid-slot-minor {
+  border-top-style: dotted;
+  border-color: #f1f5f9;
 }
 
 .fc .fc-timegrid-slot-label {

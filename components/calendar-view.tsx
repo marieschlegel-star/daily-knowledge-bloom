@@ -125,10 +125,14 @@ export function CalendarViewComponent({
         events={buildEvents()}
         editable={true}
         droppable={true}
+        eventResizableFromStart={false}
+        eventDurationEditable={true}
         height="100%"
         slotMinTime="07:00:00"
         slotMaxTime="23:00:00"
-        slotDuration="01:00:00"
+        slotDuration="00:15:00"
+        slotLabelInterval="01:00:00"
+        snapDuration="00:05:00"
         nowIndicator={true}
         dayMaxEvents={3}
         allDaySlot={true}
