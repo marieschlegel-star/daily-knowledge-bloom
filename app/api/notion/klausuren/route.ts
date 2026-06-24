@@ -1,20 +1,15 @@
 import { NextResponse } from "next/server";
-import { Client } from "@notionhq/client";
+import { notionQuery } from "@/lib/notion-fetch";
 import type { Klausur, Fach, KlausurStatus } from "@/lib/types";
-
-const notion = new Client({ auth: process.env.NOTION_API_KEY });
 
 export async function GET() {
   try {
     const dbId = process.env.NOTION_KLAUSUREN_DB_ID;
     if (!dbId) return NextResponse.json({ error: "DB ID missing" }, { status: 500 });
 
-    const response = await notion.databases.query({
-      database_id: dbId,
-      page_size: 100,
-    });
+    const pages = await notionQuery(dbId);
 
-    const klausuren: Klausur[] = response.results.map((page: any) => {
+    const klausuren: Klausur[] = pages.map((page: any) => {
       const p = page.properties;
       return {
         id: page.id,
@@ -35,6 +30,7 @@ export async function GET() {
 
     return NextResponse.json(klausuren);
   } catch (error: any) {
+    console.error("[klausuren]", error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

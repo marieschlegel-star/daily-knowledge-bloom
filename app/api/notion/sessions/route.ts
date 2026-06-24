@@ -1,20 +1,15 @@
 import { NextResponse } from "next/server";
-import { Client } from "@notionhq/client";
+import { notionQuery, notionUpdatePage } from "@/lib/notion-fetch";
 import type { LernSession, Fach, LernStatus, Priority } from "@/lib/types";
-
-const notion = new Client({ auth: process.env.NOTION_API_KEY });
 
 export async function GET() {
   try {
     const dbId = process.env.NOTION_LERNPLAN_DB_ID;
     if (!dbId) return NextResponse.json({ error: "DB ID missing" }, { status: 500 });
 
-    const response = await notion.databases.query({
-      database_id: dbId,
-      page_size: 100,
-    });
+    const pages = await notionQuery(dbId);
 
-    const sessions: LernSession[] = response.results.map((page: any) => {
+    const sessions: LernSession[] = pages.map((page: any) => {
       const p = page.properties;
       return {
         id: page.id,
@@ -39,6 +34,7 @@ export async function GET() {
 
     return NextResponse.json(sessions);
   } catch (error: any) {
+    console.error("[sessions]", error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -48,15 +44,13 @@ export async function PATCH(req: Request) {
     const { id, date } = await req.json();
     if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
 
-    await notion.pages.update({
-      page_id: id,
-      properties: {
-        Date: date ? { date: { start: date } } : { date: null },
-      },
+    await notionUpdatePage(id, {
+      Date: date ? { date: { start: date } } : { date: null },
     });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
+    console.error("[sessions PATCH]", error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
