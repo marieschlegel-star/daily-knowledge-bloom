@@ -1,11 +1,15 @@
-// Native fetch wrapper for Notion API – compatible with Node.js v24
-
-const BASE = "https://api.notion.com/v1";
+const GATEWAY = "https://connector-gateway.lovable.dev/notion/v1";
 
 function headers() {
+  const lovableKey = process.env.LOVABLE_API_KEY;
+  const notionKey = process.env.NOTION_API_KEY;
+
+  if (!lovableKey) throw new Error("LOVABLE_API_KEY is not configured");
+  if (!notionKey) throw new Error("NOTION_API_KEY is not configured");
+
   return {
-    "Authorization": `Bearer ${process.env.NOTION_API_KEY}`,
-    "Notion-Version": "2022-06-28",
+    "Authorization": `Bearer ${lovableKey}`,
+    "X-Connection-Api-Key": notionKey,
     "Content-Type": "application/json",
   };
 }
@@ -18,7 +22,7 @@ export async function notionQuery(databaseId: string, body: object = {}): Promis
     const payload: any = { page_size: 100, ...body };
     if (cursor) payload.start_cursor = cursor;
 
-    const res = await fetch(`${BASE}/databases/${databaseId}/query`, {
+    const res = await fetch(`${GATEWAY}/databases/${databaseId}/query`, {
       method: "POST",
       headers: headers(),
       body: JSON.stringify(payload),
@@ -38,7 +42,7 @@ export async function notionQuery(databaseId: string, body: object = {}): Promis
 }
 
 export async function notionCreatePage(databaseId: string, properties: object): Promise<any> {
-  const res = await fetch(`${BASE}/pages`, {
+  const res = await fetch(`${GATEWAY}/pages`, {
     method: "POST",
     headers: headers(),
     body: JSON.stringify({ parent: { database_id: databaseId }, properties }),
@@ -53,10 +57,23 @@ export async function notionCreatePage(databaseId: string, properties: object): 
 }
 
 export async function notionUpdatePage(pageId: string, properties: object): Promise<void> {
-  const res = await fetch(`${BASE}/pages/${pageId}`, {
+  const res = await fetch(`${GATEWAY}/pages/${pageId}`, {
     method: "PATCH",
     headers: headers(),
     body: JSON.stringify({ properties }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Notion API ${res.status}: ${err}`);
+  }
+}
+
+export async function notionArchivePage(pageId: string): Promise<void> {
+  const res = await fetch(`${GATEWAY}/pages/${pageId}`, {
+    method: "PATCH",
+    headers: headers(),
+    body: JSON.stringify({ archived: true }),
   });
 
   if (!res.ok) {
