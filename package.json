@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "build:dev": "next build && mkdir -p dist && (cp -r public/* dist/ 2>/dev/null || true) && echo '<!doctype html><meta http-equiv=\"refresh\" content=\"0;url=/\">' > dist/index.html",
     "build": "next build && mkdir -p dist && cp -r public/* dist/ 2>/dev/null; echo '<!doctype html><meta http-equiv=\"refresh\" content=\"0;url=/\">' > dist/index.html",
     "start": "next start",
     "lint": "next lint"
