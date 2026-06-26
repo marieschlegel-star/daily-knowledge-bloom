@@ -1,18 +1,20 @@
 /**
- * Lovable preview expects a `dist/` folder after build.
- * Cross-platform replacement for Unix-only shell in package.json scripts.
+ * Lovable publish serves static files from `dist/`.
+ * Copy Next.js static export (`out/`) instead of a redirect stub.
  */
-import { cpSync, existsSync, mkdirSync, writeFileSync } from "fs";
-import { join } from "path";
+import { cpSync, existsSync, rmSync } from "fs";
 
-const dist = "dist";
-mkdirSync(dist, { recursive: true });
+const outDir = "out";
+const distDir = "dist";
 
-if (existsSync("public")) {
-  cpSync("public", dist, { recursive: true });
+if (!existsSync(outDir)) {
+  console.error("lovable-postbuild: missing out/ — run next build with output: 'export' first");
+  process.exit(1);
 }
 
-writeFileSync(
-  join(dist, "index.html"),
-  '<!doctype html><meta http-equiv="refresh" content="0;url=/">'
-);
+if (existsSync(distDir)) {
+  rmSync(distDir, { recursive: true, force: true });
+}
+
+cpSync(outDir, distDir, { recursive: true });
+console.log("lovable-postbuild: copied out/ → dist/");
