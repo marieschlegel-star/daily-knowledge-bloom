@@ -39,7 +39,12 @@ async function notionWrite(url: string, init: RequestInit): Promise<{ skipped: b
   const body = await res.json().catch(() => ({}));
 
   if (res.ok) return { skipped: false, body };
-  if (res.status === 500 && typeof body?.error === "string" && body.error.includes("DB ID missing")) {
+  const configMissing =
+    res.status === 500 &&
+    typeof body?.error === "string" &&
+    (body.error.includes("DB ID missing") || body.error.includes("not configured"));
+
+  if (configMissing) {
     return { skipped: true, body };
   }
 
