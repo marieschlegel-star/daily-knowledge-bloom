@@ -1,4 +1,3 @@
-"use client";
 
 import { useState } from "react";
 import { X, Brain, HelpCircle, List, CreditCard, PenLine, Calendar, ExternalLink, FileText, Loader2, Trash2, Timer } from "lucide-react";
