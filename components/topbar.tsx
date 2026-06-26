@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Plus, Timer } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Timer, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -83,6 +83,14 @@ export function Topbar({ calRef, title, onNewLernblock }: TopbarProps) {
             </button>
           ))}
         </div>
+
+        <Link
+          href="/todos"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors"
+        >
+          <ListChecks className="h-3.5 w-3.5" />
+          To-Dos
+        </Link>
 
         <Link
           href="/fokus"
