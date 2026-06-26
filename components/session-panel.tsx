@@ -109,7 +109,7 @@ export function SessionPanel({ session, klausuren, pomodoros, onClose, onDelete 
   }
 
   if (showPomodoro) {
-    return <PomodoroTimer session={session} onClose={() => setShowPomodoro(false)} />;
+    return <PomodoroTimer initialSession={session} onClose={() => setShowPomodoro(false)} />;
   }
 
   return (
