@@ -1,4 +1,4 @@
-const GATEWAY = "https://connector-gateway.lovable.dev/notion/v1";
+export const GATEWAY = "https://connector-gateway.lovable.dev/notion/v1";
 
 function headers() {
   const lovableKey = process.env.LOVABLE_API_KEY;
