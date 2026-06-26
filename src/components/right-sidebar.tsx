@@ -165,7 +165,7 @@ function HeuteWidget({ sessions, todos }: { sessions: LernSession[]; todos: Todo
           </div>
         )}
 
-        {todaySessions.length === 0 && todayTodos.length === 0 && !currentCfg && (
+        {todaySessions.length === 0 && todayTodos.length === 0 && !todayPlanCfg && (
           <p className="text-[11px] text-muted-foreground">Nichts geplant für heute</p>
         )}
       </div>
