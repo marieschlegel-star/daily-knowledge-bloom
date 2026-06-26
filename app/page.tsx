@@ -24,8 +24,27 @@ import {
 } from "@/lib/dummy-data";
 import type { LernSession, Klausur, Todo, GCalEvent } from "@/lib/types";
 
-// Set to true to use Notion API, false for dummy data
-const USE_NOTION = process.env.NEXT_PUBLIC_USE_NOTION === "true";
+async function fetchJsonOrFallback<T>(url: string, fallback: T): Promise<T> {
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return fallback;
+    return res.json();
+  } catch {
+    return fallback;
+  }
+}
+
+async function notionWrite(url: string, init: RequestInit): Promise<{ skipped: boolean; body?: any }> {
+  const res = await fetch(url, init);
+  const body = await res.json().catch(() => ({}));
+
+  if (res.ok) return { skipped: false, body };
+  if (res.status === 500 && typeof body?.error === "string" && body.error.includes("DB ID missing")) {
+    return { skipped: true, body };
+  }
+
+  throw new Error(body?.error ?? "Notion konnte nicht aktualisiert werden.");
+}
 
 export default function HomePage() {
   const calRef = useRef<FullCalendar>(null);
@@ -39,41 +58,28 @@ export default function HomePage() {
   // ─── Data ─────────────────────────────────────────────────────────
   const { data: sessions = DUMMY_SESSIONS } = useQuery<LernSession[]>({
     queryKey: ["sessions"],
-    queryFn: async () => {
-      if (!USE_NOTION) return DUMMY_SESSIONS;
-      const res = await fetch("/api/notion/sessions");
-      return res.ok ? res.json() : DUMMY_SESSIONS;
-    },
-    staleTime: USE_NOTION ? 0 : Infinity,
+    queryFn: () => fetchJsonOrFallback("/api/notion/sessions", DUMMY_SESSIONS),
+    staleTime: 30_000,
   });
 
   const { data: klausuren = DUMMY_KLAUSUREN } = useQuery<Klausur[]>({
     queryKey: ["klausuren"],
-    queryFn: async () => {
-      if (!USE_NOTION) return DUMMY_KLAUSUREN;
-      const res = await fetch("/api/notion/klausuren");
-      return res.ok ? res.json() : DUMMY_KLAUSUREN;
-    },
-    staleTime: USE_NOTION ? 0 : Infinity,
+    queryFn: () => fetchJsonOrFallback("/api/notion/klausuren", DUMMY_KLAUSUREN),
+    staleTime: 30_000,
   });
 
   const { data: todos = DUMMY_TODOS } = useQuery<Todo[]>({
     queryKey: ["todos"],
-    queryFn: async () => {
-      if (!USE_NOTION) return DUMMY_TODOS;
-      const res = await fetch("/api/notion/todos");
-      return res.ok ? res.json() : DUMMY_TODOS;
-    },
-    staleTime: USE_NOTION ? 0 : Infinity,
+    queryFn: () => fetchJsonOrFallback("/api/notion/todos", DUMMY_TODOS),
+    staleTime: 30_000,
   });
 
   const gcalEvents: GCalEvent[] = [];
 
   // ─── Mutations ────────────────────────────────────────────────────
   const updateSessionDate = useMutation({
-    mutationFn: async ({ id, date }: { id: string; date: string }) => {
-      if (!USE_NOTION) return;
-      await fetch("/api/notion/sessions", {
+    mutationFn: async ({ id, date }: { id: string; date: string | null }) => {
+      await notionWrite("/api/notion/sessions", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, date }),
@@ -94,8 +100,7 @@ export default function HomePage() {
 
   const updateSessionDuration = useMutation({
     mutationFn: async ({ id, duration }: { id: string; duration: number }) => {
-      if (!USE_NOTION) return;
-      await fetch("/api/notion/sessions", {
+      await notionWrite("/api/notion/sessions", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, duration }),
@@ -116,8 +121,7 @@ export default function HomePage() {
 
   const deleteSession = useMutation({
     mutationFn: async (id: string) => {
-      if (!USE_NOTION) return;
-      await fetch("/api/notion/sessions", {
+      await notionWrite("/api/notion/sessions", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
@@ -138,8 +142,7 @@ export default function HomePage() {
 
   const completeTodo = useMutation({
     mutationFn: async ({ id, completed }: { id: string; completed: boolean }) => {
-      if (!USE_NOTION) return;
-      await fetch("/api/notion/todos", {
+      await notionWrite("/api/notion/todos", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, completed }),
@@ -210,18 +213,14 @@ export default function HomePage() {
       if (payload.type === "todo") {
         const dateStr = payload.allDay ? toDateOnly(payload.slotDate) : toLocalISO(payload.slotDate);
 
-        if (USE_NOTION) {
-          const res = await fetch("/api/notion/todos", {
+        try {
+          const result = await notionWrite("/api/notion/todos", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name: payload.name, date: dateStr, kategorie: payload.kategorie }),
           });
-          const body = await res.json().catch(() => ({}));
-          if (!res.ok) {
-            return { ok: false, error: body.error ?? "To-Do konnte nicht gespeichert werden." };
-          }
           const newTodo: Todo = {
-            id: body.id ?? `local-${Date.now()}`,
+            id: result.body?.id ?? `local-${Date.now()}`,
             name: payload.name,
             date: dateStr,
             completed: false,
@@ -230,18 +229,9 @@ export default function HomePage() {
             lernplanIds: [],
           };
           qc.setQueryData<Todo[]>(["todos"], (old) => [...(old ?? []), newTodo]);
-          qc.invalidateQueries({ queryKey: ["todos"] });
-        } else {
-          const newTodo: Todo = {
-            id: `local-todo-${Date.now()}`,
-            name: payload.name,
-            date: dateStr,
-            completed: false,
-            kategorie: payload.kategorie,
-            kat: null,
-            lernplanIds: [],
-          };
-          qc.setQueryData<Todo[]>(["todos"], (old) => [...(old ?? []), newTodo]);
+          if (!result.skipped) qc.invalidateQueries({ queryKey: ["todos"] });
+        } catch (error: any) {
+          return { ok: false, error: error.message ?? "To-Do konnte nicht gespeichert werden." };
         }
 
         if (!filters.todoKategorien.includes(payload.kategorie)) {
@@ -254,8 +244,8 @@ export default function HomePage() {
       const dateStr = toLocalISO(payload.slotDate);
       const duration = payload.duration;
 
-      if (USE_NOTION) {
-        const res = await fetch("/api/notion/sessions", {
+      try {
+        const result = await notionWrite("/api/notion/sessions", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -265,12 +255,8 @@ export default function HomePage() {
             duration,
           }),
         });
-        const body = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          return { ok: false, error: body.error ?? "Lerneinheit konnte nicht gespeichert werden." };
-        }
         const newSession: LernSession = {
-          id: body.id ?? `local-${Date.now()}`,
+          id: result.body?.id ?? `local-${Date.now()}`,
           title: payload.title,
           subject: payload.subject,
           date: dateStr,
@@ -289,28 +275,9 @@ export default function HomePage() {
           lernTodos: "",
         };
         qc.setQueryData<LernSession[]>(["sessions"], (old) => [...(old ?? []), newSession]);
-        qc.invalidateQueries({ queryKey: ["sessions"] });
-      } else {
-        const newSession: LernSession = {
-          id: `local-session-${Date.now()}`,
-          title: payload.title,
-          subject: payload.subject,
-          date: dateStr,
-          duration,
-          status: [],
-          priority: "Medium",
-          examensrelevanz: [],
-          completed: false,
-          wiederholungen: 0,
-          klausurenIds: [],
-          pomodoroIds: [],
-          todoIds: [],
-          parentId: null,
-          subIds: [],
-          unterlagen: [],
-          lernTodos: "",
-        };
-        qc.setQueryData<LernSession[]>(["sessions"], (old) => [...(old ?? []), newSession]);
+        if (!result.skipped) qc.invalidateQueries({ queryKey: ["sessions"] });
+      } catch (error: any) {
+        return { ok: false, error: error.message ?? "Lerneinheit konnte nicht gespeichert werden." };
       }
 
       if (!filters.faecher.includes(payload.subject)) {
