@@ -44,17 +44,7 @@ export async function DELETE(req: Request) {
     const { id } = await req.json();
     if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
 
-    // Notion hat kein echtes Löschen → Seite archivieren
-    const res = await fetch(`https://api.notion.com/v1/pages/${id}`, {
-      method: "PATCH",
-      headers: {
-        "Authorization": `Bearer ${process.env.NOTION_API_KEY}`,
-        "Notion-Version": "2022-06-28",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ archived: true }),
-    });
-    if (!res.ok) throw new Error(`Notion API ${res.status}: ${await res.text()}`);
+    await notionArchivePage(id);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
@@ -62,6 +52,7 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
 
 export async function POST(req: Request) {
   try {
