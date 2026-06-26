@@ -60,11 +60,11 @@ export function LeftSidebar({ sessions, todos }: LeftSidebarProps) {
   const activeKategorien = filters.todoKategorien;
 
   const filteredSessions = activeFaecher.length === 0
-    ? []
+    ? sessions.filter((s) => !s.completed)
     : sessions.filter((s) => !s.completed && activeFaecher.includes(s.subject));
 
   const filteredTodos = activeKategorien.length === 0
-    ? []
+    ? todos.filter((t) => !t.completed)
     : todos.filter((t) => !t.completed && t.kategorie != null && activeKategorien.includes(t.kategorie));
 
   return (

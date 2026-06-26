@@ -331,7 +331,12 @@ export default function HomePage() {
 
       {/* Main */}
       <main className="flex flex-col flex-1 min-w-0 overflow-hidden bg-white border-x border-border">
-        <Topbar calRef={calRef} title={calTitle} onNewLernblock={() => {}} />
+        <Topbar calRef={calRef} title={calTitle} onNewLernblock={() => {
+          const api = calRef.current?.getApi();
+          const date = api?.getDate() ?? new Date();
+          date.setHours(9, 0, 0, 0);
+          setQuickCreate({ date, allDay: false });
+        }} />
         <div className="flex-1 overflow-hidden">
           <CalendarViewComponent
             calRef={calRef}
@@ -342,7 +347,10 @@ export default function HomePage() {
             view={calendarView}
             onSessionDrop={handleSessionDrop}
             onSessionResize={handleSessionResize}
-            onEventClick={(id) => setSelectedSessionId(id)}
+            onEventClick={(id) => {
+              setDetailDate(null);
+              setSelectedSessionId(id);
+            }}
             onDatesSet={handleDatesSet}
             onDateClick={handleDateClick}
             onDayHeaderClick={handleDayHeaderClick}

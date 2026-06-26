@@ -6,8 +6,9 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
 import interactionPlugin from "@fullcalendar/interaction";
-import type { EventInput, EventReceiveArg, EventResizeDoneArg } from "@fullcalendar/core";
-import { durationHoursFromRange } from "@/lib/utils";
+import type { EventInput } from "@fullcalendar/core";
+import type { EventReceiveArg, EventResizeDoneArg } from "@fullcalendar/interaction";
+import { durationHoursFromRange, toLocalISO } from "@/lib/utils";
 import deLocale from "@fullcalendar/core/locales/de";
 import { useAppStore } from "@/lib/store";
 import { useDayStore } from "@/lib/day-store";
@@ -48,11 +49,13 @@ export function CalendarViewComponent({
   onDayHeaderClick,
   onThemeDrop,
 }: CalendarViewProps) {
-  const { visibility } = useAppStore();
+  const { visibility, filters } = useAppStore();
   const { dayTypes } = useDayStore();
 
   const buildEvents = useCallback((): EventInput[] => {
     const events: EventInput[] = [];
+    const fachFilterActive = filters.faecher.length > 0;
+    const katFilterActive = filters.todoKategorien.length > 0;
 
     // Background events for day types
     Object.entries(dayTypes).forEach(([dateStr, typ]) => {
@@ -69,7 +72,7 @@ export function CalendarViewComponent({
 
     if (visibility.lernplan) {
       sessions
-        .filter((s) => s.date)
+        .filter((s) => s.date && (!fachFilterActive || filters.faecher.includes(s.subject)))
         .forEach((s) => {
           const colors = getFachColors(s.subject);
           const start = new Date(s.date!);
@@ -109,7 +112,7 @@ export function CalendarViewComponent({
 
     if (visibility.todos) {
       todos
-        .filter((t) => t.date && !t.completed)
+        .filter((t) => t.date && !t.completed && (!katFilterActive || (t.kategorie != null && filters.todoKategorien.includes(t.kategorie))))
         .forEach((t) => {
           events.push({
             id: `todo-${t.id}`,
@@ -141,7 +144,7 @@ export function CalendarViewComponent({
     });
 
     return events;
-  }, [sessions, klausuren, todos, gcalEvents, visibility, dayTypes]);
+  }, [sessions, klausuren, todos, gcalEvents, visibility, dayTypes, filters]);
 
   return (
     <div className="h-full overflow-hidden px-2 pt-1">
@@ -206,7 +209,7 @@ export function CalendarViewComponent({
         eventReceive={(info: EventReceiveArg) => {
           const { type, sessionId, subject, thema } = info.event.extendedProps ?? {};
           if (type === "session" && sessionId) {
-            onSessionDrop(sessionId, info.event.start!.toISOString());
+            onSessionDrop(sessionId, toLocalISO(info.event.start!));
           } else if (type === "new-theme" && info.event.start) {
             onThemeDrop?.(subject, thema, info.event.start);
           }
