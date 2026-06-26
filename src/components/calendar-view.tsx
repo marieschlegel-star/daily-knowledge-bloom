@@ -18,7 +18,7 @@ import { format } from "date-fns";
 import { de } from "date-fns/locale";
 
 interface CalendarViewProps {
-  calRef: React.RefObject<FullCalendar>;
+  calRef: React.RefObject<FullCalendar | null>;
   sessions: LernSession[];
   klausuren: Klausur[];
   todos: Todo[];

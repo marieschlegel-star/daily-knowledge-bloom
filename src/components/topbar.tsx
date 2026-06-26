@@ -16,7 +16,7 @@ const VIEW_LABELS: Record<CalendarView, string> = {
 };
 
 interface TopbarProps {
-  calRef: React.RefObject<FullCalendar>;
+  calRef: React.RefObject<FullCalendar | null>;
   title: string;
   onNewLernblock: () => void;
 }
