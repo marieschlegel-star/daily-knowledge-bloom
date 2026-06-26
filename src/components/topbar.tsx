@@ -84,7 +84,7 @@ export function Topbar({ calRef, title, onNewLernblock }: TopbarProps) {
         </div>
 
         <Link
-          href="/todos"
+          to="/todos"
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors"
         >
           <ListChecks className="h-3.5 w-3.5" />
@@ -92,7 +92,7 @@ export function Topbar({ calRef, title, onNewLernblock }: TopbarProps) {
         </Link>
 
         <Link
-          href="/fokus"
+          to="/fokus"
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100 transition-colors"
         >
           <Timer className="h-3.5 w-3.5" />
