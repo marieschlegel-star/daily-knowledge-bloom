@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Plus, Timer } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Timer, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
