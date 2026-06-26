@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { X, Trash2, Plus, Settings2 } from "lucide-react";
+import { X, Trash2, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { DAY_GRUND_CONFIG, DAY_GRUND_ORDER } from "@/lib/types";
@@ -8,7 +8,7 @@ import { useDayStore } from "@/lib/day-store";
 import { resolveGrundConfig } from "@/lib/day-grund";
 import { cn, formatDayPlanHoursLabel, formatDayPlanLabel } from "@/lib/utils";
 
-const HOUR_OPTIONS = [0, 1, 2, 3, 4, 5, 6, 8] as const;
+const BUILTIN_GRID_ORDER = DAY_GRUND_ORDER.filter((g) => g !== "sonstiges");
 const EMOJI_SUGGESTIONS = ["📌", "🎯", "💡", "📖", "🧠", "⚡", "🎓", "📝", "☕", "🚗"];
 
 interface DayPlanDialogProps {
@@ -111,7 +111,7 @@ export function DayPlanDialog({ date, onClose }: DayPlanDialogProps) {
         className="relative bg-white rounded-2xl shadow-2xl border border-border w-full max-w-[420px] max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-5 pt-5 pb-4 shrink-0">
+        <div className="flex items-center justify-between px-5 pt-5 pb-4 shrink-0 border-b border-border/60">
           <div>
             <p className="text-sm font-semibold text-foreground">
               {manageMode ? "Eigene Kategorien" : "Tagesplanung"}
@@ -120,13 +120,25 @@ export function DayPlanDialog({ date, onClose }: DayPlanDialogProps) {
               {format(date, "eeee, d. MMMM yyyy", { locale: de })}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            {!manageMode && (
+              <button
+                type="button"
+                onClick={() => setManageMode(true)}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold rounded-lg bg-primary/10 text-primary hover:bg-primary/15 transition-colors"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Kategorien
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         <div className="px-5 pb-5 space-y-5 overflow-y-auto">
@@ -226,31 +238,32 @@ export function DayPlanDialog({ date, onClose }: DayPlanDialogProps) {
           ) : (
             <>
               <div className="grid grid-cols-3 gap-2">
-                {DAY_GRUND_ORDER.map((g) => {
+                {BUILTIN_GRID_ORDER.map((g) => {
                   const cfg = DAY_GRUND_CONFIG[g];
                   return renderGrundCard(g, cfg.label, cfg.emoji);
                 })}
+                <button
+                  type="button"
+                  onClick={() => setManageMode(true)}
+                  className="flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 px-2 py-3 hover:bg-primary/10 hover:border-primary transition-all"
+                >
+                  <Plus className="h-6 w-6 text-primary" />
+                  <span className="text-[11px] font-semibold text-primary text-center leading-tight">
+                    Eigene
+                  </span>
+                </button>
               </div>
 
               {customGrunds.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-0.5">
-                    Eigene Kategorien
+                    Deine Kategorien
                   </p>
                   <div className="grid grid-cols-3 gap-2">
                     {customGrunds.map((c) => renderGrundCard(c.id, c.label, c.emoji))}
                   </div>
                 </div>
               )}
-
-              <button
-                type="button"
-                onClick={() => setManageMode(true)}
-                className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-medium rounded-xl border border-dashed border-border text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors"
-              >
-                <Settings2 className="h-3.5 w-3.5" />
-                Eigene Kategorien verwalten
-              </button>
 
               {showHoursSection && (
                 <>
