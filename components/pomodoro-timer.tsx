@@ -263,7 +263,7 @@ export function PomodoroTimer({
   const CIRC = 2 * Math.PI * R;
   const dashOffset = CIRC * (1 - pct);
 
-  const subjects = useMemo(() => [...new Set(sessions.map((s) => s.subject))], [sessions]);
+  const subjects = useMemo(() => Array.from(new Set(sessions.map((s) => s.subject))), [sessions]);
   const filteredSessions = useMemo(() =>
     (selectedFach ? sessions.filter((s) => s.subject === selectedFach) : sessions)
       .filter((s) => !s.completed),
