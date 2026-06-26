@@ -7,17 +7,18 @@ import { PomodoroTimer } from "@/components/pomodoro-timer";
 import { DUMMY_SESSIONS } from "@/lib/dummy-data";
 import type { LernSession } from "@/lib/types";
 
-const USE_NOTION = process.env.NEXT_PUBLIC_USE_NOTION === "true";
-
 export default function FokusPage() {
   const { data: sessions = DUMMY_SESSIONS } = useQuery<LernSession[]>({
     queryKey: ["sessions"],
     queryFn: async () => {
-      if (!USE_NOTION) return DUMMY_SESSIONS;
-      const res = await fetch("/api/notion/sessions");
-      return res.ok ? res.json() : DUMMY_SESSIONS;
+      try {
+        const res = await fetch("/api/notion/sessions", { cache: "no-store" });
+        return res.ok ? res.json() : DUMMY_SESSIONS;
+      } catch {
+        return DUMMY_SESSIONS;
+      }
     },
-    staleTime: USE_NOTION ? 0 : Infinity,
+    staleTime: 30_000,
   });
 
   return (

@@ -59,9 +59,10 @@ export function LeftSidebar({ sessions, todos }: LeftSidebarProps) {
   const activeFaecher = filters.faecher;
   const activeKategorien = filters.todoKategorien;
 
+  const openSessions = sessions.filter((s) => !s.completed);
   const filteredSessions = activeFaecher.length === 0
-    ? sessions.filter((s) => !s.completed)
-    : sessions.filter((s) => !s.completed && activeFaecher.includes(s.subject));
+    ? []
+    : openSessions.filter((s) => activeFaecher.includes(s.subject));
 
   const filteredTodos = activeKategorien.length === 0
     ? todos.filter((t) => !t.completed)
@@ -188,7 +189,7 @@ export function LeftSidebar({ sessions, todos }: LeftSidebarProps) {
             className="w-full flex items-center justify-between px-1 py-1 text-[9px] font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
             onClick={() => setShowSessions((v) => !v)}
           >
-            <span>Lerneinheiten ({filteredSessions.length})</span>
+            <span>Lerneinheiten ({openSessions.length})</span>
             {showSessions ? <ChevronDown className="h-2.5 w-2.5" /> : <ChevronRight className="h-2.5 w-2.5" />}
           </button>
         </div>
@@ -197,7 +198,7 @@ export function LeftSidebar({ sessions, todos }: LeftSidebarProps) {
             {filteredSessions.map((s) => (
               <SessionChip key={s.id} session={s} />
             ))}
-            {filteredSessions.length === 0 && (
+            {activeFaecher.length > 0 && filteredSessions.length === 0 && (
               <p className="text-[10px] text-muted-foreground px-1 py-1">Keine offenen Einheiten</p>
             )}
           </div>
