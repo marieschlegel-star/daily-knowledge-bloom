@@ -1,8 +1,9 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { differenceInDays, parseISO, isValid, format } from "date-fns";
-import type { Fach, DayGrund, DayPlan } from "./types";
-import { FACH_COLORS, DAY_GRUND_CONFIG, DEFAULT_DAY_HOURS } from "./types";
+import type { Fach, DayPlan, CustomDayGrund } from "./types";
+import { FACH_COLORS, DEFAULT_DAY_HOURS } from "./types";
+import { resolveGrundConfig } from "./day-grund";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -68,8 +69,13 @@ export function priorityColor(priority: string | null): string {
   }
 }
 
-export function formatDayPlanLabel(grund: DayGrund, hours: number): string {
-  const cfg = DAY_GRUND_CONFIG[grund];
+export function formatDayPlanLabel(
+  grundId: string,
+  hours: number,
+  customGrunds: CustomDayGrund[] = []
+): string {
+  const cfg = resolveGrundConfig(grundId, customGrunds);
+  if (!cfg) return hours > 0 ? `${hours} h` : "Geplant";
   if (hours > 0) return `${cfg.emoji} ${cfg.label} · ${hours} h`;
   return `${cfg.emoji} ${cfg.label}`;
 }

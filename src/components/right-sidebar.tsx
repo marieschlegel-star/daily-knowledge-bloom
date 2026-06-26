@@ -10,7 +10,7 @@ import { StaatsexamenStats } from "@/components/staatsexamen-stats";
 import { loadPomoLog } from "@/lib/timer-state";
 import { getISOWeek, getYear } from "date-fns";
 import type { Klausur, Todo, LernSession, PomodoroSession, Fach } from "@/lib/types";
-import { DAY_GRUND_CONFIG } from "@/lib/types";
+import { resolveGrundConfig } from "@/lib/day-grund";
 import { format, parseISO, startOfWeek, endOfWeek, isWithinInterval, isToday } from "date-fns";
 import { de } from "date-fns/locale";
 
@@ -91,11 +91,11 @@ function StaatsexamenWidget({ klausuren }: { klausuren: Klausur[]; sessions: Ler
 // ─── Heute Widget ─────────────────────────────────────────────────────
 function HeuteWidget({ sessions, todos }: { sessions: LernSession[]; todos: Todo[] }) {
   const [open, setOpen] = useState(true);
-  const { dayPlans } = useDayStore();
+  const { dayPlans, customGrunds } = useDayStore();
 
   const todayStr = format(new Date(), "yyyy-MM-dd");
   const todayPlan = dayPlans[todayStr];
-  const todayPlanCfg = todayPlan ? DAY_GRUND_CONFIG[todayPlan.grund] : null;
+  const todayPlanCfg = todayPlan ? resolveGrundConfig(todayPlan.grund, customGrunds) : null;
 
   const todaySessions = sessions.filter((s) => {
     if (!s.date) return false;
@@ -120,7 +120,7 @@ function HeuteWidget({ sessions, todos }: { sessions: LernSession[]; todos: Todo
             className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium"
             style={{ background: todayPlanCfg.bg, color: todayPlanCfg.color }}
           >
-            <span>{formatDayPlanLabel(todayPlan.grund, todayPlan.hours)}</span>
+            <span>{formatDayPlanLabel(todayPlan.grund, todayPlan.hours, customGrunds)}</span>
           </div>
         )}
 

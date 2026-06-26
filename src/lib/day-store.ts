@@ -1,7 +1,12 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { DayGrund, DayPlan } from "./types";
+import type { CustomDayGrund, DayPlan } from "./types";
 import { DAY_GRUND_CONFIG } from "./types";
+import {
+  createCustomGrundId,
+  defaultHoursForGrund,
+  paletteForIndex,
+} from "./day-grund";
 
 const LEGACY_STORAGE_KEY = "juris-day-types";
 
@@ -17,10 +22,10 @@ const LEGACY_MIGRATION: Record<LegacyDayTyp, DayPlan> = {
   klausur: { grund: "examensklausur", hours: 1 },
 };
 
-function buildDefaultGrundDefaults(): Record<DayGrund, number> {
+function buildDefaultGrundDefaults(): Record<string, number> {
   return Object.fromEntries(
     Object.entries(DAY_GRUND_CONFIG).map(([grund, cfg]) => [grund, cfg.defaultHours])
-  ) as Record<DayGrund, number>;
+  );
 }
 
 function migrateLegacyDayTypes(): Record<string, DayPlan> {
@@ -45,11 +50,14 @@ function migrateLegacyDayTypes(): Record<string, DayPlan> {
 
 interface DayStoreState {
   dayPlans: Record<string, DayPlan>;
-  grundDefaults: Record<DayGrund, number>;
+  grundDefaults: Record<string, number>;
+  customGrunds: CustomDayGrund[];
   setDayPlan: (dateStr: string, plan: DayPlan) => void;
   removeDayPlan: (dateStr: string) => void;
-  setGrundDefault: (grund: DayGrund, hours: number) => void;
-  getGrundDefault: (grund: DayGrund) => number;
+  setGrundDefault: (grundId: string, hours: number) => void;
+  getGrundDefault: (grundId: string) => number;
+  addCustomGrund: (input: { label: string; emoji: string; defaultHours: number }) => string;
+  removeCustomGrund: (id: string) => void;
   clearAll: () => void;
 }
 
@@ -58,6 +66,7 @@ export const useDayStore = create<DayStoreState>()(
     (set, get) => ({
       dayPlans: migrateLegacyDayTypes(),
       grundDefaults: buildDefaultGrundDefaults(),
+      customGrunds: [],
       setDayPlan: (dateStr, plan) =>
         set((s) => ({ dayPlans: { ...s.dayPlans, [dateStr]: plan } })),
       removeDayPlan: (dateStr) =>
@@ -66,11 +75,42 @@ export const useDayStore = create<DayStoreState>()(
           delete next[dateStr];
           return { dayPlans: next };
         }),
-      setGrundDefault: (grund, hours) =>
+      setGrundDefault: (grundId, hours) =>
         set((s) => ({
-          grundDefaults: { ...s.grundDefaults, [grund]: hours },
+          grundDefaults: { ...s.grundDefaults, [grundId]: hours },
         })),
-      getGrundDefault: (grund) => get().grundDefaults[grund] ?? DAY_GRUND_CONFIG[grund].defaultHours,
+      getGrundDefault: (grundId) =>
+        defaultHoursForGrund(grundId, get().customGrunds, get().grundDefaults),
+      addCustomGrund: ({ label, emoji, defaultHours }) => {
+        const id = createCustomGrundId();
+        const palette = paletteForIndex(get().customGrunds.length);
+        const entry: CustomDayGrund = {
+          id,
+          label: label.trim() || "Eigene Kategorie",
+          emoji: emoji.trim() || "📌",
+          defaultHours,
+          ...palette,
+        };
+        set((s) => ({
+          customGrunds: [...s.customGrunds, entry],
+          grundDefaults: { ...s.grundDefaults, [id]: defaultHours },
+        }));
+        return id;
+      },
+      removeCustomGrund: (id) =>
+        set((s) => {
+          const dayPlans = { ...s.dayPlans };
+          for (const [dateStr, plan] of Object.entries(dayPlans)) {
+            if (plan.grund === id) delete dayPlans[dateStr];
+          }
+          const grundDefaults = { ...s.grundDefaults };
+          delete grundDefaults[id];
+          return {
+            customGrunds: s.customGrunds.filter((c) => c.id !== id),
+            dayPlans,
+            grundDefaults,
+          };
+        }),
       clearAll: () => set({ dayPlans: {} }),
     }),
     {
@@ -85,6 +125,7 @@ export const useDayStore = create<DayStoreState>()(
             ...buildDefaultGrundDefaults(),
             ...(p?.grundDefaults ?? {}),
           },
+          customGrunds: p?.customGrunds ?? [],
         };
       },
     }

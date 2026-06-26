@@ -2,7 +2,7 @@
 import { X, Plus, Trash2 } from "lucide-react";
 import { format, isSameDay, parseISO } from "date-fns";
 import { de } from "date-fns/locale";
-import { DAY_GRUND_CONFIG } from "@/lib/types";
+import { resolveGrundConfig } from "@/lib/day-grund";
 import { useDayStore } from "@/lib/day-store";
 import { useLernblockStore } from "@/lib/lernblock-store";
 import { getFachColors, formatDuration, formatDayPlanLabel } from "@/lib/utils";
@@ -33,11 +33,11 @@ export function DayDetailPanel({
   onOpenDayPlan,
 }: DayDetailPanelProps) {
   const dateStr = format(date, "yyyy-MM-dd");
-  const { dayPlans } = useDayStore();
+  const { dayPlans, customGrunds } = useDayStore();
   const { dayNotes, setDayNote } = useLernblockStore();
 
   const dayPlan = dayPlans[dateStr];
-  const planCfg = dayPlan ? DAY_GRUND_CONFIG[dayPlan.grund] : null;
+  const planCfg = dayPlan ? resolveGrundConfig(dayPlan.grund, customGrunds) : null;
   const note = dayNotes[dateStr] ?? "";
 
   // Sessions for this day
@@ -86,7 +86,7 @@ export function DayDetailPanel({
             <div className="min-w-0 flex-1">
               <p className="text-xs font-medium truncate" style={planCfg ? { color: planCfg.color } : { color: "#94a3b8" }}>
                 {dayPlan && planCfg
-                  ? formatDayPlanLabel(dayPlan.grund, dayPlan.hours)
+                  ? formatDayPlanLabel(dayPlan.grund, dayPlan.hours, customGrunds)
                   : "Tag planen"}
               </p>
             </div>

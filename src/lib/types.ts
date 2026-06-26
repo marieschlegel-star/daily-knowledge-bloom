@@ -162,8 +162,25 @@ export type DayGrund =
   | "sonstiges";
 
 export interface DayPlan {
-  grund: DayGrund;
+  grund: string;
   hours: number;
+}
+
+export interface CustomDayGrund {
+  id: string;
+  label: string;
+  emoji: string;
+  defaultHours: number;
+  bg: string;
+  color: string;
+}
+
+export interface DayGrundDisplay {
+  label: string;
+  emoji: string;
+  defaultHours: number;
+  bg: string;
+  color: string;
 }
 
 export const DAY_GRUND_ORDER: DayGrund[] = [

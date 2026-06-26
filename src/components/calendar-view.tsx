@@ -13,7 +13,7 @@ import { useAppStore } from "@/lib/store";
 import { useDayStore } from "@/lib/day-store";
 import { getFachColors } from "@/lib/utils";
 import type { LernSession, Klausur, Todo, GCalEvent } from "@/lib/types";
-import { DAY_GRUND_CONFIG } from "@/lib/types";
+import { resolveGrundConfig } from "@/lib/day-grund";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { formatDayPlanLabel } from "@/lib/utils";
@@ -52,7 +52,7 @@ export function CalendarViewComponent({
   onThemeDrop,
 }: CalendarViewProps) {
   const { visibility, filters } = useAppStore();
-  const { dayPlans } = useDayStore();
+  const { dayPlans, customGrunds } = useDayStore();
 
   const buildEvents = useCallback((): EventInput[] => {
     const events: EventInput[] = [];
@@ -61,7 +61,8 @@ export function CalendarViewComponent({
 
     // Background events for day types
     Object.entries(dayPlans).forEach(([dateStr, plan]) => {
-      const cfg = DAY_GRUND_CONFIG[plan.grund];
+      const cfg = resolveGrundConfig(plan.grund, customGrunds);
+      if (!cfg) return;
       events.push({
         id: `daytype-${dateStr}`,
         start: dateStr,
@@ -146,7 +147,7 @@ export function CalendarViewComponent({
     });
 
     return events;
-  }, [sessions, klausuren, todos, gcalEvents, visibility, dayPlans, filters]);
+  }, [sessions, klausuren, todos, gcalEvents, visibility, dayPlans, customGrunds, filters]);
 
   return (
     <div className="h-full overflow-hidden px-2 pt-1">
@@ -176,7 +177,7 @@ export function CalendarViewComponent({
         dayHeaderContent={(arg) => {
           const dateStr = format(arg.date, "yyyy-MM-dd");
           const plan = dayPlans[dateStr];
-          const cfg = plan ? DAY_GRUND_CONFIG[plan.grund] : null;
+          const cfg = plan ? resolveGrundConfig(plan.grund, customGrunds) : null;
           const isToday = format(new Date(), "yyyy-MM-dd") === dateStr;
 
           return (
@@ -190,7 +191,7 @@ export function CalendarViewComponent({
               </span>
               {plan && cfg ? (
                 <span className="text-[9px] font-medium leading-tight text-center px-0.5" style={{ color: cfg.color }}>
-                  {formatDayPlanLabel(plan.grund, plan.hours)}
+                  {formatDayPlanLabel(plan.grund, plan.hours, customGrunds)}
                 </span>
               ) : (
                 <span className="text-[9px] text-transparent group-hover:text-muted-foreground transition-colors">
