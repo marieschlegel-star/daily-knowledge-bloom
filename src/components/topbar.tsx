@@ -1,6 +1,6 @@
 
 import { useRef } from "react";
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight, Plus, Timer, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
