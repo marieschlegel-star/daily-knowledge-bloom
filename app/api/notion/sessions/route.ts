@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { notionQuery, notionUpdatePage, notionCreatePage } from "@/lib/notion-fetch";
+import { notionQuery, notionUpdatePage, notionCreatePage, notionArchivePage } from "@/lib/notion-fetch";
 import type { LernSession, Fach, LernStatus, Priority } from "@/lib/types";
 
 export async function GET() {
