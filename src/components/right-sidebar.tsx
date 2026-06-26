@@ -1,15 +1,17 @@
 
 import { useState } from "react";
 import { ChevronDown, ChevronRight, Check } from "lucide-react";
-import { cn, daysUntil, countdownLabel, formatDuration, getFachColors, calcEffektiveLerntage } from "@/lib/utils";
+import { cn, daysUntil, countdownLabel, formatDuration, getFachColors, formatDayPlanLabel } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { PremiumSlider } from "@/components/premium-slider";
 import { useDayStore } from "@/lib/day-store";
+import { useExamenStore } from "@/lib/examen-store";
+import { StaatsexamenStats } from "@/components/staatsexamen-stats";
 import { loadPomoLog } from "@/lib/timer-state";
 import { getISOWeek, getYear } from "date-fns";
-import type { Klausur, Todo, LernSession, PomodoroSession, Fach, DayTyp } from "@/lib/types";
-import { TAGESTYP_CONFIG } from "@/lib/types";
-import { format, parseISO, startOfWeek, endOfWeek, isWithinInterval, isToday, startOfDay } from "date-fns";
+import type { Klausur, Todo, LernSession, PomodoroSession, Fach } from "@/lib/types";
+import { DAY_GRUND_CONFIG } from "@/lib/types";
+import { format, parseISO, startOfWeek, endOfWeek, isWithinInterval, isToday } from "date-fns";
 import { de } from "date-fns/locale";
 
 interface RightSidebarProps {
@@ -34,114 +36,66 @@ export function RightSidebar({ klausuren, todos, sessions, pomodoros, onTodoComp
 }
 
 // ─── Staatsexamen Widget ─────────────────────────────────────────────
-function StaatsexamenWidget({ klausuren, sessions }: { klausuren: Klausur[]; sessions: LernSession[] }) {
+function StaatsexamenWidget({ klausuren }: { klausuren: Klausur[]; sessions: LernSession[] }) {
   const [open, setOpen] = useState(true);
-  const { dayTypes } = useDayStore();
+  const { examDate } = useExamenStore();
 
-  // First upcoming Klausur
   const firstKlausur = klausuren
     .filter((k) => k.schreibDatum && (daysUntil(k.schreibDatum) ?? -1) >= 0)
     .sort((a, b) => new Date(a.schreibDatum!).getTime() - new Date(b.schreibDatum!).getTime())[0];
-
-  const today = startOfDay(new Date());
-
-  const stats = firstKlausur?.schreibDatum
-    ? calcEffektiveLerntage(dayTypes, today, new Date(firstKlausur.schreibDatum))
-    : null;
 
   const klausurenList = klausuren
     .filter((k) => k.schreibDatum && (daysUntil(k.schreibDatum) ?? -1) >= -30)
     .sort((a, b) => new Date(a.schreibDatum!).getTime() - new Date(b.schreibDatum!).getTime())
     .slice(0, 6);
 
+  const showStoredExam = Boolean(examDate);
+  const showNotionList = !showStoredExam && klausurenList.length > 0;
+
   return (
     <WidgetCard title="Staatsexamen" open={open} onToggle={() => setOpen(!open)}>
       <div className="space-y-3">
-        {firstKlausur ? (
-          <>
-            {/* First klausur highlight */}
-            <div className="rounded-xl bg-slate-50 border border-border px-3 py-2.5">
-              <p className="text-[10px] text-muted-foreground mb-0.5">Nächste Examensklausur</p>
-              <p className="text-xs font-semibold text-foreground">{firstKlausur.title}</p>
-              <p className="text-[11px] text-muted-foreground">
-                {firstKlausur.schreibDatum
-                  ? format(parseISO(firstKlausur.schreibDatum), "eeee, d. MMMM yyyy", { locale: de })
-                  : "–"}
-              </p>
-            </div>
-
-            {/* Stats row */}
-            {stats && (
-              <div className="grid grid-cols-3 gap-1.5">
-                <StatBox
-                  label="Kalendertage"
-                  value={stats.kalender}
-                  color="#6346dc"
-                  icon="📅"
-                />
-                <StatBox
-                  label="Lerntage"
-                  value={stats.effektiv}
-                  color="#10b981"
-                  icon="📚"
-                  highlight
-                />
-                <StatBox
-                  label="Nicht-Lerntage"
-                  value={stats.nichtLerntage}
-                  color="#f59e0b"
-                  icon="🏖"
-                />
-              </div>
-            )}
-
-            {/* All klausuren list */}
-            <div className="space-y-1 pt-1 border-t border-border">
-              {klausurenList.map((k) => {
-                const days = daysUntil(k.schreibDatum);
-                const cd = countdownLabel(days);
-                const colors = getFachColors(k.fach);
-                return (
-                  <div key={k.id} className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: colors.text }} />
-                    <p className="text-[10px] text-foreground flex-1 truncate">{k.title}</p>
-                    <span className={cn("text-[10px] font-semibold shrink-0", cd.color)}>{cd.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </>
+        {showStoredExam && examDate ? (
+          <StaatsexamenStats examDate={examDate} subtitle="Dein Prüfungstermin" />
+        ) : firstKlausur?.schreibDatum ? (
+          <StaatsexamenStats
+            examDate={firstKlausur.schreibDatum}
+            title={firstKlausur.title}
+            subtitle="Nächste Examensklausur"
+          />
         ) : (
-          <p className="text-xs text-muted-foreground py-1">Keine Examensklausuren geplant</p>
+          <p className="text-xs text-muted-foreground py-1">Kein Prüfungstermin gesetzt</p>
+        )}
+
+        {showNotionList && (
+          <div className="space-y-1 pt-1 border-t border-border">
+            {klausurenList.map((k) => {
+              const days = daysUntil(k.schreibDatum);
+              const cd = countdownLabel(days);
+              const colors = getFachColors(k.fach);
+              return (
+                <div key={k.id} className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: colors.text }} />
+                  <p className="text-[10px] text-foreground flex-1 truncate">{k.title}</p>
+                  <span className={cn("text-[10px] font-semibold shrink-0", cd.color)}>{cd.label}</span>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
     </WidgetCard>
   );
 }
 
-function StatBox({ label, value, color, icon, highlight }: {
-  label: string; value: number; color: string; icon: string; highlight?: boolean;
-}) {
-  return (
-    <div className={cn(
-      "rounded-xl p-2 text-center border",
-      highlight ? "border-primary/20 bg-primary/5" : "border-border bg-slate-50"
-    )}>
-      <p className="text-base">{icon}</p>
-      <p className="text-sm font-bold mt-0.5" style={{ color }}>{value}</p>
-      <p className="text-[9px] text-muted-foreground leading-tight mt-0.5">{label}</p>
-    </div>
-  );
-}
-
 // ─── Heute Widget ─────────────────────────────────────────────────────
 function HeuteWidget({ sessions, todos }: { sessions: LernSession[]; todos: Todo[] }) {
   const [open, setOpen] = useState(true);
-  const { dayTypes } = useDayStore();
+  const { dayPlans } = useDayStore();
 
   const todayStr = format(new Date(), "yyyy-MM-dd");
-  const currentDayTyp = dayTypes[todayStr];
-  const currentCfg = currentDayTyp ? TAGESTYP_CONFIG[currentDayTyp] : null;
+  const todayPlan = dayPlans[todayStr];
+  const todayPlanCfg = todayPlan ? DAY_GRUND_CONFIG[todayPlan.grund] : null;
 
   const todaySessions = sessions.filter((s) => {
     if (!s.date) return false;
@@ -161,14 +115,12 @@ function HeuteWidget({ sessions, todos }: { sessions: LernSession[]; todos: Todo
     <WidgetCard title="Heute" open={open} onToggle={() => setOpen(!open)}>
       <div className="space-y-2">
         {/* Day type badge */}
-        {currentCfg && (
+        {todayPlan && todayPlanCfg && (
           <div
             className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium"
-            style={{ background: currentCfg.bg, color: currentCfg.color }}
+            style={{ background: todayPlanCfg.bg, color: todayPlanCfg.color }}
           >
-            <span>{currentCfg.emoji}</span>
-            <span>{currentCfg.label}</span>
-            <span className="ml-auto text-[10px] opacity-70">Faktor {currentCfg.factor}</span>
+            <span>{formatDayPlanLabel(todayPlan.grund, todayPlan.hours)}</span>
           </div>
         )}
 
@@ -351,8 +303,10 @@ function TodoWidget({ todos, onComplete }: { todos: Todo[]; onComplete: (id: str
           return (
             <div key={todo.id} className="flex items-start gap-2 group py-1 px-1 rounded-md hover:bg-muted/40 transition-colors">
               <button
+                type="button"
+                aria-label="Als erledigt markieren"
                 onClick={() => onComplete(todo.id, true)}
-                className="mt-0.5 w-4 h-4 rounded border border-border flex items-center justify-center shrink-0 hover:border-primary hover:bg-primary/10 transition-colors"
+                className="mt-0.5 w-4 h-4 rounded border-2 border-slate-400 bg-white flex items-center justify-center shrink-0 hover:border-primary hover:bg-primary/10 transition-colors"
               >
                 <Check className="h-2.5 w-2.5 opacity-0 group-hover:opacity-50 text-primary" />
               </button>

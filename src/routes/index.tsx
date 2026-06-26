@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { useRef, useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import FullCalendar from "@fullcalendar/react";
 import { format, getISOWeek } from "date-fns";
 import { de } from "date-fns/locale";
@@ -11,11 +12,13 @@ import { RightSidebar } from "@/components/right-sidebar";
 import { CalendarViewComponent } from "@/components/calendar-view";
 import { Topbar } from "@/components/topbar";
 import { SessionPanel } from "@/components/session-panel";
+import { KlausurPanel } from "@/components/klausur-panel";
 import { QuickCreateModal, type QuickCreatePayload, type QuickCreatePrefill } from "@/components/quick-create-modal";
-import { DayTypePicker } from "@/components/day-type-picker";
+import { DayPlanDialog } from "@/components/day-plan-dialog";
 import { DayDetailPanel } from "@/components/day-detail-panel";
 import { useAppStore } from "@/lib/store";
 import { toLocalISO, toDateOnly } from "@/lib/utils";
+import { useLernblockStore } from "@/lib/lernblock-store";
 import {
   DUMMY_SESSIONS,
   DUMMY_KLAUSUREN,
@@ -59,6 +62,7 @@ function HomePage() {
   const [quickCreate, setQuickCreate] = useState<{ date: Date; allDay: boolean; prefill?: QuickCreatePrefill } | null>(null);
   const [pickerDate, setPickerDate] = useState<Date | null>(null);
   const [detailDate, setDetailDate] = useState<Date | null>(null);
+  const [selectedKlausurId, setSelectedKlausurId] = useState<string | null>(null);
 
   // ─── Data ─────────────────────────────────────────────────────────
   const { data: sessions = DUMMY_SESSIONS } = useQuery<LernSession[]>({
@@ -126,6 +130,7 @@ function HomePage() {
 
   const deleteSession = useMutation({
     mutationFn: async (id: string) => {
+      if (id.startsWith("local-")) return;
       await notionWrite("/api/notion/sessions", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
@@ -138,12 +143,60 @@ function HomePage() {
       qc.setQueryData<LernSession[]>(["sessions"], (old) =>
         old?.filter((s) => s.id !== id) ?? []
       );
+      useLernblockStore.getState().clearMeta(id);
       return { prev };
     },
-    onError: (_e, _v, ctx) => {
+    onError: (error, _id, ctx) => {
       if (ctx?.prev) qc.setQueryData(["sessions"], ctx.prev);
+      toast.error("Lerneinheit konnte nicht gelöscht werden", {
+        description: error instanceof Error ? error.message : undefined,
+      });
     },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["sessions"] }),
   });
+
+  const handleDeleteSession = useCallback(
+    (id: string, options?: { closePanel?: boolean }) => {
+      if (selectedSessionId === id || options?.closePanel !== false) {
+        setSelectedSessionId(null);
+      }
+      deleteSession.mutate(id);
+    },
+    [deleteSession, selectedSessionId, setSelectedSessionId]
+  );
+
+  const deleteKlausur = useMutation({
+    mutationFn: async (id: string) => {
+      await notionWrite("/api/notion/klausuren", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+    },
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: ["klausuren"] });
+      const prev = qc.getQueryData<Klausur[]>(["klausuren"]);
+      qc.setQueryData<Klausur[]>(["klausuren"], (old) =>
+        old?.filter((k) => k.id !== id) ?? []
+      );
+      return { prev };
+    },
+    onError: (error, _id, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["klausuren"], ctx.prev);
+      toast.error("Klausur konnte nicht entfernt werden", {
+        description: error instanceof Error ? error.message : undefined,
+      });
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["klausuren"] }),
+  });
+
+  const handleDeleteKlausur = useCallback(
+    (id: string) => {
+      setSelectedKlausurId(null);
+      deleteKlausur.mutate(id);
+    },
+    [deleteKlausur]
+  );
 
   const completeTodo = useMutation({
     mutationFn: async ({ id, completed }: { id: string; completed: boolean }) => {
@@ -163,7 +216,9 @@ function HomePage() {
     },
     onError: (_e, _v, ctx) => {
       if (ctx?.prev) qc.setQueryData(["todos"], ctx.prev);
+      toast.error("To-Do konnte nicht aktualisiert werden");
     },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["todos"] }),
   });
 
   // ─── Handlers ─────────────────────────────────────────────────────
@@ -295,6 +350,7 @@ function HomePage() {
   );
 
   const selectedSession = sessions.find((s) => s.id === selectedSessionId) ?? null;
+  const selectedKlausur = klausuren.find((k) => k.id === selectedKlausurId) ?? null;
 
   return (
     <div className="flex h-screen bg-[#F8F9FB] overflow-hidden">
@@ -321,7 +377,13 @@ function HomePage() {
             onSessionResize={handleSessionResize}
             onEventClick={(id) => {
               setDetailDate(null);
+              setSelectedKlausurId(null);
               setSelectedSessionId(id);
+            }}
+            onKlausurClick={(id) => {
+              setDetailDate(null);
+              setSelectedSessionId(null);
+              setSelectedKlausurId(id);
             }}
             onDatesSet={handleDatesSet}
             onDateClick={handleDateClick}
@@ -339,10 +401,13 @@ function HomePage() {
             klausuren={klausuren}
             pomodoros={DUMMY_POMODOROS}
             onClose={() => setSelectedSessionId(null)}
-            onDelete={(id) => {
-              deleteSession.mutate(id);
-              setSelectedSessionId(null);
-            }}
+            onDelete={(id) => handleDeleteSession(id)}
+          />
+        ) : selectedKlausur ? (
+          <KlausurPanel
+            klausur={selectedKlausur}
+            onClose={() => setSelectedKlausurId(null)}
+            onDelete={(id) => handleDeleteKlausur(id)}
           />
         ) : detailDate ? (
           <DayDetailPanel
@@ -353,6 +418,8 @@ function HomePage() {
             onClose={() => setDetailDate(null)}
             onNewLernblock={(date) => { setDetailDate(null); setQuickCreate({ date, allDay: false }); }}
             onSessionClick={(id) => { setDetailDate(null); setSelectedSessionId(id); }}
+            onDeleteSession={(id) => handleDeleteSession(id, { closePanel: false })}
+            onOpenDayPlan={() => setPickerDate(detailDate)}
           />
         ) : (
           <RightSidebar
@@ -367,7 +434,7 @@ function HomePage() {
 
       {/* Day Type Picker */}
       {pickerDate && (
-        <DayTypePicker date={pickerDate} onClose={() => setPickerDate(null)} />
+        <DayPlanDialog date={pickerDate} onClose={() => setPickerDate(null)} />
       )}
 
       {/* Quick-Create Modal */}

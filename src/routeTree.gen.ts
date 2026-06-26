@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TodosRouteImport } from './routes/todos'
+import { Route as StaatsexamenRouteImport } from './routes/staatsexamen'
 import { Route as FokusRouteImport } from './routes/fokus'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiNotionTodosRouteImport } from './routes/api/notion/todos'
@@ -21,6 +22,11 @@ import { Route as ApiAiChatRouteImport } from './routes/api/ai/chat'
 const TodosRoute = TodosRouteImport.update({
   id: '/todos',
   path: '/todos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaatsexamenRoute = StaatsexamenRouteImport.update({
+  id: '/staatsexamen',
+  path: '/staatsexamen',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FokusRoute = FokusRouteImport.update({
@@ -62,6 +68,7 @@ const ApiAiChatRoute = ApiAiChatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/fokus': typeof FokusRoute
+  '/staatsexamen': typeof StaatsexamenRoute
   '/todos': typeof TodosRoute
   '/api/ai/chat': typeof ApiAiChatRoute
   '/api/notion/health': typeof ApiNotionHealthRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/fokus': typeof FokusRoute
+  '/staatsexamen': typeof StaatsexamenRoute
   '/todos': typeof TodosRoute
   '/api/ai/chat': typeof ApiAiChatRoute
   '/api/notion/health': typeof ApiNotionHealthRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/fokus': typeof FokusRoute
+  '/staatsexamen': typeof StaatsexamenRoute
   '/todos': typeof TodosRoute
   '/api/ai/chat': typeof ApiAiChatRoute
   '/api/notion/health': typeof ApiNotionHealthRoute
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/fokus'
+    | '/staatsexamen'
     | '/todos'
     | '/api/ai/chat'
     | '/api/notion/health'
@@ -105,6 +115,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/fokus'
+    | '/staatsexamen'
     | '/todos'
     | '/api/ai/chat'
     | '/api/notion/health'
@@ -115,6 +126,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/fokus'
+    | '/staatsexamen'
     | '/todos'
     | '/api/ai/chat'
     | '/api/notion/health'
@@ -126,6 +138,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   FokusRoute: typeof FokusRoute
+  StaatsexamenRoute: typeof StaatsexamenRoute
   TodosRoute: typeof TodosRoute
   ApiAiChatRoute: typeof ApiAiChatRoute
   ApiNotionHealthRoute: typeof ApiNotionHealthRoute
@@ -141,6 +154,13 @@ declare module '@tanstack/react-router' {
       path: '/todos'
       fullPath: '/todos'
       preLoaderRoute: typeof TodosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staatsexamen': {
+      id: '/staatsexamen'
+      path: '/staatsexamen'
+      fullPath: '/staatsexamen'
+      preLoaderRoute: typeof StaatsexamenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/fokus': {
@@ -198,6 +218,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   FokusRoute: FokusRoute,
+  StaatsexamenRoute: StaatsexamenRoute,
   TodosRoute: TodosRoute,
   ApiAiChatRoute: ApiAiChatRoute,
   ApiNotionHealthRoute: ApiNotionHealthRoute,
@@ -208,3 +229,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

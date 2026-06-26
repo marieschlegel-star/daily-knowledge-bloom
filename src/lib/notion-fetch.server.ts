@@ -42,6 +42,14 @@ export async function notionCreatePage(databaseId: string, properties: object): 
   return res.json();
 }
 
+export async function notionGetPage(pageId: string): Promise<any> {
+  const res = await fetch(`${GATEWAY}/pages/${pageId}`, {
+    headers: headers(),
+  });
+  if (!res.ok) throw new Error(`Notion API ${res.status}: ${await res.text()}`);
+  return res.json();
+}
+
 export async function notionUpdatePage(pageId: string, properties: object): Promise<void> {
   const res = await fetch(`${GATEWAY}/pages/${pageId}`, {
     method: "PATCH",

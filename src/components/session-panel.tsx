@@ -124,7 +124,8 @@ export function SessionPanel({ session, klausuren, pomodoros, onClose, onDelete 
             <div className="flex items-center gap-1.5 mr-1">
               <span className="text-[11px] text-red-600 font-medium">Löschen?</span>
               <button
-                onClick={() => { onDelete?.(session.id); onClose(); }}
+                type="button"
+                onClick={() => onDelete?.(session.id)}
                 className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-red-500 text-white hover:bg-red-600 transition-colors"
               >
                 Ja

@@ -1,12 +1,11 @@
 
-import { useState } from "react";
-import { X, Plus } from "lucide-react";
+import { X, Plus, Trash2 } from "lucide-react";
 import { format, isSameDay, parseISO } from "date-fns";
 import { de } from "date-fns/locale";
-import { TAGESTYP_CONFIG, type DayTyp } from "@/lib/types";
+import { DAY_GRUND_CONFIG } from "@/lib/types";
 import { useDayStore } from "@/lib/day-store";
 import { useLernblockStore } from "@/lib/lernblock-store";
-import { getFachColors, formatDuration } from "@/lib/utils";
+import { getFachColors, formatDuration, formatDayPlanLabel } from "@/lib/utils";
 import { FachChip } from "./fach-chip";
 import type { LernSession, Todo, Klausur } from "@/lib/types";
 
@@ -18,6 +17,8 @@ interface DayDetailPanelProps {
   onClose: () => void;
   onNewLernblock: (date: Date) => void;
   onSessionClick: (id: string) => void;
+  onDeleteSession?: (id: string) => void;
+  onOpenDayPlan?: () => void;
 }
 
 export function DayDetailPanel({
@@ -28,14 +29,15 @@ export function DayDetailPanel({
   onClose,
   onNewLernblock,
   onSessionClick,
+  onDeleteSession,
+  onOpenDayPlan,
 }: DayDetailPanelProps) {
   const dateStr = format(date, "yyyy-MM-dd");
-  const { dayTypes, setDayType, removeDayType } = useDayStore();
+  const { dayPlans } = useDayStore();
   const { dayNotes, setDayNote } = useLernblockStore();
-  const [showTypPicker, setShowTypPicker] = useState(false);
 
-  const dayType = dayTypes[dateStr] as DayTyp | undefined;
-  const typCfg = dayType ? TAGESTYP_CONFIG[dayType] : null;
+  const dayPlan = dayPlans[dateStr];
+  const planCfg = dayPlan ? DAY_GRUND_CONFIG[dayPlan.grund] : null;
   const note = dayNotes[dateStr] ?? "";
 
   // Sessions for this day
@@ -45,8 +47,6 @@ export function DayDetailPanel({
 
   const geplantH = daySessions.reduce((acc, s) => acc + s.duration, 0);
   const erledigtH = daySessions.filter((s) => s.completed).reduce((acc, s) => acc + s.duration, 0);
-
-  const dateLabel = format(date, "eeee, d. MMMM yyyy", { locale: de });
 
   return (
     <div className="absolute inset-0 z-50 flex flex-col bg-white border-l border-border shadow-panel overflow-hidden">
@@ -71,55 +71,27 @@ export function DayDetailPanel({
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {/* Tagestyp */}
+        {/* Tagesplan */}
         <div className="px-4 py-3 border-b border-border">
           <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            Tagestyp
+            Tagesplan
           </p>
-          {showTypPicker ? (
-            <div className="space-y-1">
-              {(Object.entries(TAGESTYP_CONFIG) as [DayTyp, typeof TAGESTYP_CONFIG[DayTyp]][]).map(([typ, cfg]) => {
-                const active = dayType === typ;
-                return (
-                  <button
-                    key={typ}
-                    onClick={() => { active ? removeDayType(dateStr) : setDayType(dateStr, typ); setShowTypPicker(false); }}
-                    className="flex items-center justify-between w-full px-3 py-1.5 rounded-lg hover:bg-muted/50 transition-colors"
-                    style={{ background: active ? cfg.bg : undefined }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm">{cfg.emoji}</span>
-                      <span className="text-[11px] font-medium text-foreground">{cfg.label}</span>
-                      <span className="text-[9px] text-muted-foreground">Faktor {cfg.factor}</span>
-                    </div>
-                    {active && <div className="w-1.5 h-1.5 rounded-full" style={{ background: cfg.color }} />}
-                  </button>
-                );
-              })}
-              <button onClick={() => setShowTypPicker(false)} className="w-full text-[10px] text-muted-foreground py-1 hover:text-foreground transition-colors">
-                Abbrechen
-              </button>
+          <button
+            type="button"
+            onClick={onOpenDayPlan}
+            className="flex items-center gap-2 px-3 py-2.5 rounded-xl w-full text-left border border-border hover:bg-muted/40 transition-colors"
+            style={planCfg ? { background: planCfg.bg, borderColor: "transparent" } : {}}
+          >
+            <span className="text-base">{planCfg ? planCfg.emoji : "📅"}</span>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-medium truncate" style={planCfg ? { color: planCfg.color } : { color: "#94a3b8" }}>
+                {dayPlan && planCfg
+                  ? formatDayPlanLabel(dayPlan.grund, dayPlan.hours)
+                  : "Tag planen"}
+              </p>
             </div>
-          ) : (
-            <button
-              onClick={() => setShowTypPicker(true)}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl w-full text-left border border-border hover:bg-muted/40 transition-colors"
-              style={typCfg ? { background: typCfg.bg, borderColor: "transparent" } : {}}
-            >
-              <span className="text-base">{typCfg ? typCfg.emoji : "📅"}</span>
-              <div>
-                <p className="text-xs font-medium" style={typCfg ? { color: typCfg.color } : { color: "#94a3b8" }}>
-                  {typCfg ? typCfg.label : "Kein Tagestyp"}
-                </p>
-                {typCfg && (
-                  <p className="text-[9px]" style={{ color: typCfg.color, opacity: 0.7 }}>
-                    Lernfaktor: {typCfg.factor}
-                  </p>
-                )}
-              </div>
-              <span className="ml-auto text-[10px] text-muted-foreground">ändern</span>
-            </button>
-          )}
+            <span className="text-[10px] text-muted-foreground shrink-0">ändern</span>
+          </button>
         </div>
 
         {/* Lernstunden-Zusammenfassung */}
@@ -167,22 +139,37 @@ export function DayDetailPanel({
                 const colors = getFachColors(s.subject);
                 const timeStr = s.date ? format(parseISO(s.date), "HH:mm", { locale: de }) : "";
                 return (
-                  <button
+                  <div
                     key={s.id}
-                    onClick={() => { onSessionClick(s.id); onClose(); }}
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-left hover:opacity-90 transition-opacity"
+                    className="flex items-center gap-1.5 rounded-xl overflow-hidden"
                     style={{ background: colors.bg }}
                   >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[11px] font-medium truncate" style={{ color: colors.text }}>
-                        {s.title}
-                      </p>
-                      <p className="text-[10px]" style={{ color: colors.text, opacity: 0.7 }}>
-                        {timeStr && `${timeStr} · `}{formatDuration(s.duration)}
-                      </p>
-                    </div>
-                    <FachChip fach={s.subject} />
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => { onSessionClick(s.id); onClose(); }}
+                      className="flex-1 min-w-0 flex items-center gap-2 px-3 py-2 text-left hover:opacity-90 transition-opacity"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-medium truncate" style={{ color: colors.text }}>
+                          {s.title}
+                        </p>
+                        <p className="text-[10px]" style={{ color: colors.text, opacity: 0.7 }}>
+                          {timeStr && `${timeStr} · `}{formatDuration(s.duration)}
+                        </p>
+                      </div>
+                      <FachChip fach={s.subject} />
+                    </button>
+                    {onDeleteSession && (
+                      <button
+                        type="button"
+                        aria-label="Lernblock löschen"
+                        onClick={() => onDeleteSession(s.id)}
+                        className="shrink-0 mr-2 p-1.5 rounded-lg hover:bg-red-100 text-red-500 transition-colors"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
                 );
               })}
             </div>

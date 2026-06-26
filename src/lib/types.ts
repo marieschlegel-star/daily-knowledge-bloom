@@ -149,31 +149,55 @@ export interface GCalCalendar {
   color: string;
 }
 
-// ─── Tagestypen ────────────────────────────────────────────────────
-export type DayTyp =
-  | "lerntag"
-  | "halb"
+// ─── Tagesplanung ──────────────────────────────────────────────────
+export type DayGrund =
+  | "arbeit"
   | "ag"
+  | "examensklausur"
+  | "privat"
   | "urlaub"
   | "krank"
-  | "privat"
-  | "klausur";
+  | "reise"
+  | "feiertag"
+  | "sonstiges";
 
-export const TAGESTYP_CONFIG: Record<DayTyp, {
+export interface DayPlan {
+  grund: DayGrund;
+  hours: number;
+}
+
+export const DAY_GRUND_ORDER: DayGrund[] = [
+  "arbeit",
+  "ag",
+  "examensklausur",
+  "privat",
+  "urlaub",
+  "krank",
+  "reise",
+  "feiertag",
+  "sonstiges",
+];
+
+export const DAY_GRUND_CONFIG: Record<DayGrund, {
   label: string;
   emoji: string;
-  factor: number;
+  defaultHours: number;
   bg: string;
   color: string;
 }> = {
-  lerntag:  { label: "Lerntag",        emoji: "📚", factor: 1.0, bg: "rgba(219,234,254,0.35)", color: "#1E40AF" },
-  halb:     { label: "Halber Lerntag", emoji: "📖", factor: 0.5, bg: "rgba(254,243,199,0.45)", color: "#92400E" },
-  ag:       { label: "AG",             emoji: "💼", factor: 0.5, bg: "rgba(209,250,229,0.45)", color: "#065F46" },
-  urlaub:   { label: "Urlaub",         emoji: "🏖",  factor: 0.0, bg: "rgba(254,215,170,0.45)", color: "#C2410C" },
-  krank:    { label: "Krank",          emoji: "🤒", factor: 0.0, bg: "rgba(254,202,202,0.45)", color: "#B91C1C" },
-  privat:   { label: "Privat",         emoji: "🏡", factor: 0.0, bg: "rgba(237,233,254,0.45)", color: "#7C3AED" },
-  klausur:  { label: "Examensklausur", emoji: "⚖️", factor: 1.0, bg: "rgba(254,240,138,0.55)", color: "#854D0E" },
+  arbeit:          { label: "Arbeit",          emoji: "🏛", defaultHours: 3, bg: "rgba(219,234,254,0.35)", color: "#1E40AF" },
+  ag:              { label: "AG",              emoji: "📚", defaultHours: 2, bg: "rgba(209,250,229,0.45)", color: "#065F46" },
+  examensklausur:  { label: "Examensklausur",  emoji: "⚖", defaultHours: 1, bg: "rgba(254,240,138,0.55)", color: "#854D0E" },
+  privat:          { label: "Privat",          emoji: "🏠", defaultHours: 6, bg: "rgba(237,233,254,0.45)", color: "#7C3AED" },
+  urlaub:          { label: "Urlaub",          emoji: "🏖", defaultHours: 0, bg: "rgba(254,215,170,0.45)", color: "#C2410C" },
+  krank:           { label: "Krank",           emoji: "🤒", defaultHours: 0, bg: "rgba(254,202,202,0.45)", color: "#B91C1C" },
+  reise:           { label: "Reise",           emoji: "✈", defaultHours: 0, bg: "rgba(224,242,254,0.45)", color: "#0369A1" },
+  feiertag:        { label: "Feiertag",        emoji: "🎉", defaultHours: 0, bg: "rgba(254,226,226,0.45)", color: "#BE123C" },
+  sonstiges:       { label: "Sonstiges",       emoji: "➕", defaultHours: 4, bg: "rgba(241,245,249,0.55)", color: "#475569" },
 };
+
+/** Ungeplante Tage zählen als voller Lerntag (8h). */
+export const DEFAULT_DAY_HOURS = 8;
 
 // ─── UI State ──────────────────────────────────────────────────────
 export type CalendarView = "timeGridDay" | "timeGridWeek" | "dayGridMonth" | "listWeek";

@@ -13,9 +13,10 @@ import { useAppStore } from "@/lib/store";
 import { useDayStore } from "@/lib/day-store";
 import { getFachColors } from "@/lib/utils";
 import type { LernSession, Klausur, Todo, GCalEvent } from "@/lib/types";
-import { TAGESTYP_CONFIG } from "@/lib/types";
+import { DAY_GRUND_CONFIG } from "@/lib/types";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
+import { formatDayPlanLabel } from "@/lib/utils";
 
 interface CalendarViewProps {
   calRef: React.RefObject<FullCalendar | null>;
@@ -27,6 +28,7 @@ interface CalendarViewProps {
   onSessionDrop: (sessionId: string, newDate: string) => void;
   onSessionResize: (sessionId: string, duration: number) => void;
   onEventClick: (sessionId: string) => void;
+  onKlausurClick?: (klausurId: string) => void;
   onDatesSet?: (info: any) => void;
   onDateClick?: (date: Date, allDay: boolean) => void;
   onDayHeaderClick?: (date: Date) => void;
@@ -43,13 +45,14 @@ export function CalendarViewComponent({
   onSessionDrop,
   onSessionResize,
   onEventClick,
+  onKlausurClick,
   onDatesSet,
   onDateClick,
   onDayHeaderClick,
   onThemeDrop,
 }: CalendarViewProps) {
   const { visibility, filters } = useAppStore();
-  const { dayTypes } = useDayStore();
+  const { dayPlans } = useDayStore();
 
   const buildEvents = useCallback((): EventInput[] => {
     const events: EventInput[] = [];
@@ -57,15 +60,15 @@ export function CalendarViewComponent({
     const katFilterActive = filters.todoKategorien.length > 0;
 
     // Background events for day types
-    Object.entries(dayTypes).forEach(([dateStr, typ]) => {
-      const cfg = TAGESTYP_CONFIG[typ];
+    Object.entries(dayPlans).forEach(([dateStr, plan]) => {
+      const cfg = DAY_GRUND_CONFIG[plan.grund];
       events.push({
         id: `daytype-${dateStr}`,
         start: dateStr,
         allDay: true,
         display: "background",
         backgroundColor: cfg.bg,
-        extendedProps: { type: "daytype", dayTyp: typ },
+        extendedProps: { type: "daytype", grund: plan.grund },
       });
     });
 
@@ -104,7 +107,7 @@ export function CalendarViewComponent({
             borderColor: "#FCA5A5",
             textColor: "#991B1B",
             editable: false,
-            extendedProps: { type: "klausur" },
+            extendedProps: { type: "klausur", klausurId: k.id },
           });
         });
     }
@@ -143,7 +146,7 @@ export function CalendarViewComponent({
     });
 
     return events;
-  }, [sessions, klausuren, todos, gcalEvents, visibility, dayTypes, filters]);
+  }, [sessions, klausuren, todos, gcalEvents, visibility, dayPlans, filters]);
 
   return (
     <div className="h-full overflow-hidden px-2 pt-1">
@@ -172,26 +175,26 @@ export function CalendarViewComponent({
         datesSet={onDatesSet}
         dayHeaderContent={(arg) => {
           const dateStr = format(arg.date, "yyyy-MM-dd");
-          const typ = dayTypes[dateStr];
-          const cfg = typ ? TAGESTYP_CONFIG[typ] : null;
+          const plan = dayPlans[dateStr];
+          const cfg = plan ? DAY_GRUND_CONFIG[plan.grund] : null;
           const isToday = format(new Date(), "yyyy-MM-dd") === dateStr;
 
           return (
             <div
               className="flex flex-col items-center gap-0.5 py-1 cursor-pointer group w-full"
               onClick={() => onDayHeaderClick?.(arg.date)}
-              title="Tagestyp setzen"
+              title="Tagesplanung"
             >
               <span className={`text-[11px] font-semibold transition-colors group-hover:text-primary ${isToday ? "text-primary" : "text-foreground/80"}`}>
                 {format(arg.date, "EEE d.", { locale: de })}
               </span>
-              {cfg ? (
-                <span className="text-[9px] font-medium" style={{ color: cfg.color }}>
-                  {cfg.emoji} {cfg.label}
+              {plan && cfg ? (
+                <span className="text-[9px] font-medium leading-tight text-center px-0.5" style={{ color: cfg.color }}>
+                  {formatDayPlanLabel(plan.grund, plan.hours)}
                 </span>
               ) : (
                 <span className="text-[9px] text-transparent group-hover:text-muted-foreground transition-colors">
-                  + Typ
+                  + Planen
                 </span>
               )}
             </div>
@@ -215,8 +218,11 @@ export function CalendarViewComponent({
           info.event.remove();
         }}
         eventClick={(info) => {
-          const sid = info.event.extendedProps.sessionId;
-          if (sid) onEventClick(sid);
+          info.jsEvent.preventDefault();
+          info.jsEvent.stopPropagation();
+          const { sessionId, klausurId, type } = info.event.extendedProps ?? {};
+          if (sessionId) onEventClick(sessionId);
+          else if (type === "klausur" && klausurId) onKlausurClick?.(klausurId);
         }}
         dateClick={(info) => onDateClick?.(info.date, info.allDay)}
         eventContent={(arg) => <EventContent arg={arg} />}

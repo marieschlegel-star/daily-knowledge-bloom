@@ -6,6 +6,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowLeft, Check, RefreshCw, AlertCircle } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { de } from "date-fns/locale";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Todo, TodoKategorie } from "@/lib/types";
 
@@ -47,9 +48,24 @@ function TodosPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, completed }),
       });
-      if (!res.ok) throw new Error("Update fehlgeschlagen");
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error ?? "Update fehlgeschlagen");
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["todos"] }),
+    onMutate: async ({ id, completed }) => {
+      await qc.cancelQueries({ queryKey: ["todos"] });
+      const prev = qc.getQueryData<Todo[]>(["todos"]);
+      qc.setQueryData<Todo[]>(["todos"], (old) =>
+        old?.map((t) => (t.id === id ? { ...t, completed } : t)) ?? []
+      );
+      return { prev };
+    },
+    onError: (error, _vars, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["todos"], ctx.prev);
+      toast.error("To-Do konnte nicht aktualisiert werden", {
+        description: error instanceof Error ? error.message : undefined,
+      });
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["todos"] }),
   });
 
   const todos = data ?? [];
@@ -176,12 +192,15 @@ function TodosPage() {
                   return (
                     <li key={t.id} className="flex items-start gap-3 px-4 py-3 hover:bg-muted/30 transition-colors">
                       <button
+                        type="button"
+                        aria-label={t.completed ? "Als offen markieren" : "Als erledigt markieren"}
+                        disabled={toggle.isPending}
                         onClick={() => toggle.mutate({ id: t.id, completed: !t.completed })}
                         className={cn(
-                          "mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors",
+                          "mt-0.5 w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
                           t.completed
                             ? "bg-primary border-primary text-background"
-                            : "border-border hover:border-primary hover:bg-primary/10"
+                            : "border-slate-400 bg-white hover:border-primary hover:bg-primary/10"
                         )}
                       >
                         {t.completed && <Check className="h-3 w-3" />}

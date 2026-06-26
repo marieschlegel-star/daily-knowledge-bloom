@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { notionQuery } from "@/lib/notion-fetch.server";
+import { notionQuery, notionArchivePage } from "@/lib/notion-fetch.server";
 import type { Klausur, Fach, KlausurStatus } from "@/lib/types";
 
 export const Route = createFileRoute("/api/notion/klausuren")({
@@ -31,6 +31,17 @@ export const Route = createFileRoute("/api/notion/klausuren")({
           return Response.json(klausuren);
         } catch (e: any) {
           console.error("[klausuren]", e.message);
+          return Response.json({ error: e.message }, { status: 500 });
+        }
+      },
+      DELETE: async ({ request }) => {
+        try {
+          const { id } = await request.json();
+          if (!id) return Response.json({ error: "ID required" }, { status: 400 });
+          await notionArchivePage(id);
+          return Response.json({ success: true });
+        } catch (e: any) {
+          console.error("[klausuren DELETE]", e.message);
           return Response.json({ error: e.message }, { status: 500 });
         }
       },

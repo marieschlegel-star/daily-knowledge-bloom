@@ -1,7 +1,7 @@
 
 import { useRef } from "react";
 import { Link } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, Plus, Timer, ListChecks } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Timer, ListChecks, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -82,6 +82,14 @@ export function Topbar({ calRef, title, onNewLernblock }: TopbarProps) {
             </button>
           ))}
         </div>
+
+        <Link
+          to="/staatsexamen"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+        >
+          <GraduationCap className="h-3.5 w-3.5" />
+          Staatsexamen
+        </Link>
 
         <Link
           to="/todos"

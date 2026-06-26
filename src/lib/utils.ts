@@ -1,8 +1,8 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { differenceInDays, parseISO, isValid, format } from "date-fns";
-import type { Fach, DayTyp } from "./types";
-import { FACH_COLORS, TAGESTYP_CONFIG } from "./types";
+import type { Fach, DayGrund, DayPlan } from "./types";
+import { FACH_COLORS, DAY_GRUND_CONFIG, DEFAULT_DAY_HOURS } from "./types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -68,9 +68,25 @@ export function priorityColor(priority: string | null): string {
   }
 }
 
+export function formatDayPlanLabel(grund: DayGrund, hours: number): string {
+  const cfg = DAY_GRUND_CONFIG[grund];
+  if (hours > 0) return `${cfg.emoji} ${cfg.label} · ${hours} h`;
+  return `${cfg.emoji} ${cfg.label}`;
+}
+
+export function formatDayPlanHoursLabel(hours: number): string {
+  if (hours === 1) return "1 Stunde Lernen";
+  return `${hours} Stunden Lernen`;
+}
+
+function dayLearningHours(dayPlans: Record<string, DayPlan>, dateKey: string): number {
+  const plan = dayPlans[dateKey];
+  return plan ? plan.hours : DEFAULT_DAY_HOURS;
+}
+
 /** Berechnet Kalender-, effektive Lerntage und Nicht-Lerntage zwischen zwei Daten. */
 export function calcEffektiveLerntage(
-  dayTypes: Record<string, DayTyp>,
+  dayPlans: Record<string, DayPlan>,
   from: Date,
   to: Date
 ): { kalender: number; effektiv: number; nichtLerntage: number } {
@@ -86,10 +102,9 @@ export function calcEffektiveLerntage(
   while (cursor <= end) {
     kalender++;
     const key = format(cursor, "yyyy-MM-dd");
-    const typ = dayTypes[key];
-    const factor = typ != null ? TAGESTYP_CONFIG[typ].factor : 1.0; // Default: Lerntag
-    if (factor > 0) {
-      effektiv += factor;
+    const hours = dayLearningHours(dayPlans, key);
+    if (hours > 0) {
+      effektiv += hours / DEFAULT_DAY_HOURS;
     } else {
       nichtLerntage++;
     }
