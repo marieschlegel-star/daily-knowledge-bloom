@@ -318,7 +318,7 @@ export default function HomePage() {
       </main>
 
       {/* Right Sidebar */}
-      <div className="relative w-[260px] shrink-0 bg-white">
+      <div className="relative w-[300px] shrink-0 bg-white">
         {selectedSession ? (
           <SessionPanel
             session={selectedSession}

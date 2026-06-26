@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronRight, Check, CalendarDays } from "lucide-react";
+import { ChevronDown, ChevronRight, Check } from "lucide-react";
 import { cn, daysUntil, countdownLabel, formatDuration, getFachColors, calcEffektiveLerntage } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
+import { PremiumSlider } from "@/components/premium-slider";
 import { useDayStore } from "@/lib/day-store";
 import type { Klausur, Todo, LernSession, PomodoroSession, Fach, DayTyp } from "@/lib/types";
 import { TAGESTYP_CONFIG } from "@/lib/types";
@@ -20,7 +21,7 @@ interface RightSidebarProps {
 
 export function RightSidebar({ klausuren, todos, sessions, pomodoros, onTodoComplete }: RightSidebarProps) {
   return (
-    <aside className="w-[260px] flex flex-col border-l border-border bg-white overflow-y-auto">
+    <aside className="w-full flex flex-col border-l border-border bg-white overflow-y-auto">
       <div className="p-3 space-y-2">
         <StaatsexamenWidget klausuren={klausuren} sessions={sessions} />
         <HeuteWidget sessions={sessions} todos={todos} />
@@ -277,22 +278,22 @@ function LernfortschrittWidget({ sessions, pomodoros }: { sessions: LernSession[
 
         <Progress value={absolviert} max={Math.max(geplant, 0.1)} className="h-2" color="bg-primary" />
 
-        <div className="space-y-2 pt-1 border-t border-border">
-          <SliderRow
+        <div className="space-y-4 pt-2 border-t border-border">
+          <PremiumSlider
             label="Lernziel"
             value={geplant}
             max={MAX_SLIDER_H}
             color="#6346dc"
             onChange={(v) => setManualGeplant(v)}
-            onReset={autoGeplant !== manualGeplant ? () => setManualGeplant(null) : undefined}
+            onReset={manualGeplant !== null ? () => setManualGeplant(null) : undefined}
           />
-          <SliderRow
+          <PremiumSlider
             label="Absolviert"
             value={absolviert}
             max={MAX_SLIDER_H}
             color="#10b981"
             onChange={(v) => setManualAbsolviert(v)}
-            onReset={autoAbsolviert !== manualAbsolviert ? () => setManualAbsolviert(null) : undefined}
+            onReset={manualAbsolviert !== null ? () => setManualAbsolviert(null) : undefined}
           />
         </div>
 
@@ -315,31 +316,6 @@ function LernfortschrittWidget({ sessions, pomodoros }: { sessions: LernSession[
   );
 }
 
-function SliderRow({ label, value, max, color, onChange, onReset }: {
-  label: string; value: number; max: number; color: string;
-  onChange: (v: number) => void; onReset?: () => void;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-[10px] text-muted-foreground w-16 shrink-0">{label}</span>
-      <input
-        type="range" min={0} max={max} step={0.5} value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer"
-        style={{ accentColor: color }}
-      />
-      <span className="text-[10px] font-medium text-foreground w-8 text-right shrink-0">
-        {value % 1 === 0 ? `${value}h` : `${value}h`}
-      </span>
-      {onReset && (
-        <button onClick={onReset} title="Zurücksetzen"
-          className="text-[9px] text-muted-foreground hover:text-foreground transition-colors shrink-0">
-          ↺
-        </button>
-      )}
-    </div>
-  );
-}
 
 // ─── Todo Widget ─────────────────────────────────────────────────────
 function TodoWidget({ todos, onComplete }: { todos: Todo[]; onComplete: (id: string, completed: boolean) => void }) {
