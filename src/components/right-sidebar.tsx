@@ -24,7 +24,7 @@ interface RightSidebarProps {
 
 export function RightSidebar({ klausuren, todos, sessions, pomodoros, onTodoComplete }: RightSidebarProps) {
   return (
-    <aside className="w-full flex flex-col border-l border-border bg-white overflow-y-auto">
+    <aside className="w-full flex flex-col border border-border rounded-xl bg-muted/30 overflow-y-auto shrink-0">
       <div className="p-3 space-y-2">
         <StaatsexamenWidget klausuren={klausuren} sessions={sessions} />
         <HeuteWidget sessions={sessions} todos={todos} />
@@ -76,8 +76,8 @@ function StaatsexamenWidget({ klausuren }: { klausuren: Klausur[]; sessions: Ler
               return (
                 <div key={k.id} className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: colors.text }} />
-                  <p className="text-[10px] text-foreground flex-1 truncate">{k.title}</p>
-                  <span className={cn("text-[10px] font-semibold shrink-0", cd.color)}>{cd.label}</span>
+                  <p className="text-label text-foreground flex-1 truncate">{k.title}</p>
+                  <span className={cn("text-label font-semibold shrink-0", cd.color)}>{cd.label}</span>
                 </div>
               );
             })}
@@ -126,12 +126,12 @@ function HeuteWidget({ sessions, todos }: { sessions: LernSession[]; todos: Todo
 
         {/* Hours summary */}
         <div className="flex gap-2">
-          <div className="flex-1 rounded-lg bg-slate-50 border border-border px-2 py-1.5 text-center">
-            <p className="text-[10px] text-muted-foreground">Geplant</p>
+          <div className="flex-1 rounded-lg bg-muted/40 border border-border px-2 py-1.5 text-center">
+            <p className="text-meta text-muted-foreground">Geplant</p>
             <p className="text-sm font-bold text-foreground">{formatDuration(totalH)}</p>
           </div>
-          <div className="flex-1 rounded-lg bg-slate-50 border border-border px-2 py-1.5 text-center">
-            <p className="text-[10px] text-muted-foreground">Erledigt</p>
+          <div className="flex-1 rounded-lg bg-muted/40 border border-border px-2 py-1.5 text-center">
+            <p className="text-meta text-muted-foreground">Erledigt</p>
             <p className="text-sm font-bold text-green-600">{formatDuration(doneH)}</p>
           </div>
         </div>
@@ -144,8 +144,8 @@ function HeuteWidget({ sessions, todos }: { sessions: LernSession[]; todos: Todo
               return (
                 <div key={s.id} className="flex items-center gap-2 rounded-md px-2 py-1" style={{ background: colors.bg }}>
                   <div className="w-1 h-full rounded-full shrink-0" style={{ background: colors.text }} />
-                  <p className="text-[10px] font-medium flex-1 truncate" style={{ color: colors.text }}>{s.title}</p>
-                  <span className="text-[9px] shrink-0" style={{ color: colors.text, opacity: 0.7 }}>{formatDuration(s.duration)}</span>
+                  <p className="text-label font-medium flex-1 truncate" style={{ color: colors.text }}>{s.title}</p>
+                  <span className="text-meta shrink-0" style={{ color: colors.text, opacity: 0.7 }}>{formatDuration(s.duration)}</span>
                 </div>
               );
             })}
@@ -155,11 +155,11 @@ function HeuteWidget({ sessions, todos }: { sessions: LernSession[]; todos: Todo
         {/* Today's todos */}
         {todayTodos.length > 0 && (
           <div className="space-y-0.5 pt-1 border-t border-border">
-            <p className="text-[10px] font-semibold text-muted-foreground mb-1">To-Dos heute</p>
+            <p className="text-label font-semibold text-muted-foreground mb-1">To-Dos heute</p>
             {todayTodos.map((t) => (
               <div key={t.id} className="flex items-center gap-1.5 py-0.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-                <p className="text-[10px] text-foreground">{t.name}</p>
+                <p className="text-label text-foreground">{t.name}</p>
               </div>
             ))}
           </div>
@@ -223,15 +223,15 @@ function LernfortschrittWidget({ sessions, pomodoros }: { sessions: LernSession[
       <div className="space-y-3">
         <div className="flex justify-between items-baseline">
           <div>
-            <p className="text-[10px] text-muted-foreground">Absolviert</p>
+            <p className="text-label text-muted-foreground">Absolviert</p>
             <p className="text-lg font-bold text-foreground">{formatDuration(absolviert)}</p>
           </div>
           <div className="text-right">
-            <p className="text-[10px] text-muted-foreground">Lernziel</p>
+            <p className="text-label text-muted-foreground">Lernziel</p>
             <p className="text-sm font-semibold text-foreground">{formatDuration(geplant)}</p>
           </div>
           <div className="text-right">
-            <p className="text-[10px] text-muted-foreground">Fortschritt</p>
+            <p className="text-label text-muted-foreground">Fortschritt</p>
             <p className={cn("text-sm font-bold", pct >= 100 ? "text-green-600" : pct >= 60 ? "text-primary" : "text-amber-500")}>
               {pct}%
             </p>
@@ -245,7 +245,7 @@ function LernfortschrittWidget({ sessions, pomodoros }: { sessions: LernSession[
             label="Lernziel"
             value={geplant}
             max={MAX_SLIDER_H}
-            color="#6346dc"
+            color="hsl(248 58% 52%)"
             onChange={(v) => setManualGeplant(v)}
             onReset={manualGeplant !== null ? () => setManualGeplant(null) : undefined}
           />
@@ -266,8 +266,8 @@ function LernfortschrittWidget({ sessions, pomodoros }: { sessions: LernSession[
               return (
                 <div key={fach} className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full shrink-0" style={{ background: colors.text }} />
-                  <span className="text-[10px] text-muted-foreground flex-1">{fach}</span>
-                  <span className="text-[10px] font-medium text-foreground">{formatDuration(h)}</span>
+                  <span className="text-label text-muted-foreground flex-1">{fach}</span>
+                  <span className="text-label font-medium text-foreground">{formatDuration(h)}</span>
                 </div>
               );
             })}
@@ -306,14 +306,14 @@ function TodoWidget({ todos, onComplete }: { todos: Todo[]; onComplete: (id: str
                 type="button"
                 aria-label="Als erledigt markieren"
                 onClick={() => onComplete(todo.id, true)}
-                className="mt-0.5 w-4 h-4 rounded border-2 border-slate-400 bg-white flex items-center justify-center shrink-0 hover:border-primary hover:bg-primary/10 transition-colors"
+                className="mt-0.5 w-4 h-4 rounded border-2 border-border bg-card flex items-center justify-center shrink-0 hover:border-primary hover:bg-primary/10 transition-colors"
               >
                 <Check className="h-2.5 w-2.5 opacity-0 group-hover:opacity-50 text-primary" />
               </button>
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-foreground leading-tight">{todo.name}</p>
                 {todo.date && (
-                  <p className={cn("text-[10px] mt-0.5",
+                  <p className={cn("text-label mt-0.5",
                     isOverdue && "text-red-500 font-medium",
                     isTodayItem && "text-primary font-medium",
                     !isOverdue && !isTodayItem && "text-muted-foreground"
@@ -325,7 +325,7 @@ function TodoWidget({ todos, onComplete }: { todos: Todo[]; onComplete: (id: str
                 )}
               </div>
               {todo.kategorie && (
-                <span className="text-[9px] bg-muted text-muted-foreground rounded px-1 py-0.5 shrink-0">
+                <span className="text-meta bg-muted text-muted-foreground rounded px-1 py-0.5 shrink-0">
                   {todo.kategorie}
                 </span>
               )}
@@ -345,12 +345,12 @@ function WidgetCard({ title, open, onToggle, children }: {
   title: string; open: boolean; onToggle: () => void; children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-white shadow-widget overflow-hidden">
+    <div className="rounded-xl border border-border bg-card shadow-card overflow-hidden">
       <button
         onClick={onToggle}
-        className="flex items-center justify-between w-full px-3 py-2.5 hover:bg-muted/40 transition-colors"
+        className="flex items-center justify-between w-full px-3 py-3 hover:bg-muted/50 transition-colors"
       >
-        <span className="text-xs font-semibold text-foreground">{title}</span>
+        <span className="text-label font-semibold">{title}</span>
         {open
           ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
           : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}

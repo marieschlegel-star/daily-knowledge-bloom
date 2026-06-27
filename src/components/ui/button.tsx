@@ -15,7 +15,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || loading}
         className={cn(
           "inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
-          variant === "default" && "bg-primary text-white hover:bg-primary/90 shadow-sm",
+          variant === "default" && "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
           variant === "outline" && "border border-border bg-background hover:bg-muted text-foreground",
           variant === "ghost" && "hover:bg-muted text-foreground",
           variant === "secondary" && "bg-secondary text-secondary-foreground hover:bg-secondary/80",

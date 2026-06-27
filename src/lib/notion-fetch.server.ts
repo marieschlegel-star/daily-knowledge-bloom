@@ -58,16 +58,6 @@ export async function notionUpdatePage(pageId: string, properties: object): Prom
   });
   if (!res.ok) throw new Error(`Notion API ${res.status}: ${await res.text()}`);
 }
-
-export async function notionArchivePage(pageId: string): Promise<void> {
-  const res = await fetch(`${GATEWAY}/pages/${pageId}`, {
-    method: "PATCH",
-    headers: headers(),
-    body: JSON.stringify({ archived: true }),
-  });
-  if (!res.ok) throw new Error(`Notion API ${res.status}: ${await res.text()}`);
-}
-
 export function gatewayHeaders() {
   return headers();
 }

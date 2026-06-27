@@ -18,7 +18,6 @@ import { DayPlanDialog } from "@/components/day-plan-dialog";
 import { DayDetailPanel } from "@/components/day-detail-panel";
 import { useAppStore } from "@/lib/store";
 import { toLocalISO, toDateOnly } from "@/lib/utils";
-import { useLernblockStore } from "@/lib/lernblock-store";
 import {
   DUMMY_SESSIONS,
   DUMMY_KLAUSUREN,
@@ -127,76 +126,6 @@ function HomePage() {
       if (ctx?.prev) qc.setQueryData(["sessions"], ctx.prev);
     },
   });
-
-  const deleteSession = useMutation({
-    mutationFn: async (id: string) => {
-      if (id.startsWith("local-")) return;
-      await notionWrite("/api/notion/sessions", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-    },
-    onMutate: async (id) => {
-      await qc.cancelQueries({ queryKey: ["sessions"] });
-      const prev = qc.getQueryData<LernSession[]>(["sessions"]);
-      qc.setQueryData<LernSession[]>(["sessions"], (old) =>
-        old?.filter((s) => s.id !== id) ?? []
-      );
-      useLernblockStore.getState().clearMeta(id);
-      return { prev };
-    },
-    onError: (error, _id, ctx) => {
-      if (ctx?.prev) qc.setQueryData(["sessions"], ctx.prev);
-      toast.error("Lerneinheit konnte nicht gelöscht werden", {
-        description: error instanceof Error ? error.message : undefined,
-      });
-    },
-    onSettled: () => qc.invalidateQueries({ queryKey: ["sessions"] }),
-  });
-
-  const handleDeleteSession = useCallback(
-    (id: string, options?: { closePanel?: boolean }) => {
-      if (selectedSessionId === id || options?.closePanel !== false) {
-        setSelectedSessionId(null);
-      }
-      deleteSession.mutate(id);
-    },
-    [deleteSession, selectedSessionId, setSelectedSessionId]
-  );
-
-  const deleteKlausur = useMutation({
-    mutationFn: async (id: string) => {
-      await notionWrite("/api/notion/klausuren", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-    },
-    onMutate: async (id) => {
-      await qc.cancelQueries({ queryKey: ["klausuren"] });
-      const prev = qc.getQueryData<Klausur[]>(["klausuren"]);
-      qc.setQueryData<Klausur[]>(["klausuren"], (old) =>
-        old?.filter((k) => k.id !== id) ?? []
-      );
-      return { prev };
-    },
-    onError: (error, _id, ctx) => {
-      if (ctx?.prev) qc.setQueryData(["klausuren"], ctx.prev);
-      toast.error("Klausur konnte nicht entfernt werden", {
-        description: error instanceof Error ? error.message : undefined,
-      });
-    },
-    onSettled: () => qc.invalidateQueries({ queryKey: ["klausuren"] }),
-  });
-
-  const handleDeleteKlausur = useCallback(
-    (id: string) => {
-      setSelectedKlausurId(null);
-      deleteKlausur.mutate(id);
-    },
-    [deleteKlausur]
-  );
 
   const completeTodo = useMutation({
     mutationFn: async ({ id, completed }: { id: string; completed: boolean }) => {
@@ -353,12 +282,12 @@ function HomePage() {
   const selectedKlausur = klausuren.find((k) => k.id === selectedKlausurId) ?? null;
 
   return (
-    <div className="flex h-screen bg-[#F8F9FB] overflow-hidden">
+    <div className="flex h-screen bg-background overflow-hidden p-2 gap-2">
       {/* Left Sidebar */}
       <LeftSidebar sessions={sessions} todos={todos} />
 
       {/* Main */}
-      <main className="flex flex-col flex-1 min-w-0 overflow-hidden bg-white border-x border-border">
+      <main className="flex flex-col flex-1 min-w-0 overflow-hidden bg-card rounded-xl border border-border shadow-card">
         <Topbar calRef={calRef} title={calTitle} onNewLernblock={() => {
           const api = calRef.current?.getApi();
           const date = api?.getDate() ?? new Date();
@@ -394,20 +323,18 @@ function HomePage() {
       </main>
 
       {/* Right Sidebar */}
-      <div className="relative w-[300px] shrink-0 bg-white">
+      <div className="relative w-[300px] shrink-0">
         {selectedSession ? (
           <SessionPanel
             session={selectedSession}
             klausuren={klausuren}
             pomodoros={DUMMY_POMODOROS}
             onClose={() => setSelectedSessionId(null)}
-            onDelete={(id) => handleDeleteSession(id)}
           />
         ) : selectedKlausur ? (
           <KlausurPanel
             klausur={selectedKlausur}
             onClose={() => setSelectedKlausurId(null)}
-            onDelete={(id) => handleDeleteKlausur(id)}
           />
         ) : detailDate ? (
           <DayDetailPanel
@@ -418,7 +345,6 @@ function HomePage() {
             onClose={() => setDetailDate(null)}
             onNewLernblock={(date) => { setDetailDate(null); setQuickCreate({ date, allDay: false }); }}
             onSessionClick={(id) => { setDetailDate(null); setSelectedSessionId(id); }}
-            onDeleteSession={(id) => handleDeleteSession(id, { closePanel: false })}
             onOpenDayPlan={() => setPickerDate(detailDate)}
           />
         ) : (

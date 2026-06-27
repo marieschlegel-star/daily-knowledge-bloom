@@ -39,10 +39,10 @@ export function Topbar({ calRef, title, onNewLernblock }: TopbarProps) {
   };
 
   return (
-    <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-white shrink-0">
+    <div className="flex items-center justify-between px-4 py-3 border-b border-border/80 bg-card shrink-0">
       {/* Title + Nav */}
       <div className="flex items-center gap-2">
-        <h1 className="text-sm font-semibold text-foreground mr-1">{title}</h1>
+        <h1 className="text-base font-semibold text-foreground mr-1">{title}</h1>
         <button
           onClick={() => navigate("prev")}
           className="p-1 rounded-md hover:bg-muted transition-colors"
@@ -51,7 +51,7 @@ export function Topbar({ calRef, title, onNewLernblock }: TopbarProps) {
         </button>
         <button
           onClick={() => navigate("today")}
-          className="px-2.5 py-1 text-xs font-medium rounded-md border border-border hover:bg-muted transition-colors text-foreground"
+          className="px-2.5 py-1 text-label rounded-md border border-border hover:bg-muted transition-colors text-foreground"
         >
           Heute
         </button>
@@ -65,17 +65,16 @@ export function Topbar({ calRef, title, onNewLernblock }: TopbarProps) {
 
       {/* View switcher + actions */}
       <div className="flex items-center gap-2">
-        {/* View tabs */}
-        <div className="flex rounded-lg border border-border overflow-hidden">
+        <div className="flex rounded-lg bg-muted p-0.5">
           {(Object.keys(VIEW_LABELS) as CalendarView[]).map((view) => (
             <button
               key={view}
               onClick={() => switchView(view)}
               className={cn(
-                "px-3 py-1 text-xs font-medium transition-colors",
+                "px-3 py-1 text-label rounded-md transition-colors",
                 calendarView === view
-                  ? "bg-primary text-white"
-                  : "bg-white text-foreground hover:bg-muted"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               {VIEW_LABELS[view]}
@@ -85,7 +84,7 @@ export function Topbar({ calRef, title, onNewLernblock }: TopbarProps) {
 
         <Link
           to="/staatsexamen"
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-label rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
         >
           <GraduationCap className="h-3.5 w-3.5" />
           Staatsexamen
@@ -93,7 +92,7 @@ export function Topbar({ calRef, title, onNewLernblock }: TopbarProps) {
 
         <Link
           to="/todos"
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-label rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
         >
           <ListChecks className="h-3.5 w-3.5" />
           To-Dos
@@ -101,7 +100,7 @@ export function Topbar({ calRef, title, onNewLernblock }: TopbarProps) {
 
         <Link
           to="/fokus"
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-label rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
         >
           <Timer className="h-3.5 w-3.5" />
           Fokus-Timer

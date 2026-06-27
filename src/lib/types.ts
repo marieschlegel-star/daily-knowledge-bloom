@@ -2,24 +2,24 @@
 export type Fach = "ZPO" | "ZivR" | "ZPO III" | "StrafR" | "StPO" | "VwR" | "VwGO";
 
 export const FACH_COLORS: Record<Fach | "default", { bg: string; text: string; border: string }> = {
-  ZPO:    { bg: "#DBEAFE", text: "#1E40AF", border: "#BFDBFE" },
-  "ZPO III": { bg: "#DBEAFE", text: "#1E40AF", border: "#BFDBFE" },
-  ZivR:   { bg: "#EAF3DE", text: "#3B6D11", border: "#BBF7D0" },
-  StrafR: { bg: "#EDE9FE", text: "#5B21B6", border: "#DDD6FE" },
-  StPO:   { bg: "#EDE9FE", text: "#5B21B6", border: "#DDD6FE" },
-  VwR:    { bg: "#D1FAE5", text: "#065F46", border: "#A7F3D0" },
-  VwGO:   { bg: "#D1FAE5", text: "#065F46", border: "#A7F3D0" },
-  default: { bg: "#F1F5F9", text: "#475569", border: "#E2E8F0" },
+  ZPO:    { bg: "#EEF4FD", text: "#2563EB", border: "#D4E4F7" },
+  "ZPO III": { bg: "#EEF4FD", text: "#2563EB", border: "#D4E4F7" },
+  ZivR:   { bg: "#F2F8EA", text: "#4D7C0F", border: "#DCEFC4" },
+  StrafR: { bg: "#F3EFFE", text: "#6D28D9", border: "#E4D9FC" },
+  StPO:   { bg: "#F3EFFE", text: "#6D28D9", border: "#E4D9FC" },
+  VwR:    { bg: "#E8F8F0", text: "#047857", border: "#C6EDE0" },
+  VwGO:   { bg: "#E8F8F0", text: "#047857", border: "#C6EDE0" },
+  default: { bg: "#F5F3EF", text: "#57534E", border: "#E7E5E0" },
 };
 
 export const FACH_CALENDAR_COLORS: Record<string, string> = {
-  ZPO:    "#1E40AF",
-  "ZPO III": "#1E40AF",
-  ZivR:   "#3B6D11",
-  StrafR: "#5B21B6",
-  StPO:   "#5B21B6",
-  VwR:    "#065F46",
-  VwGO:   "#065F46",
+  ZPO:    "#2563EB",
+  "ZPO III": "#2563EB",
+  ZivR:   "#4D7C0F",
+  StrafR: "#6D28D9",
+  StPO:   "#6D28D9",
+  VwR:    "#047857",
+  VwGO:   "#047857",
 };
 
 // ─── Lernplan (Learning Session) ───────────────────────────────────
@@ -202,15 +202,15 @@ export const DAY_GRUND_CONFIG: Record<DayGrund, {
   bg: string;
   color: string;
 }> = {
-  arbeit:          { label: "Arbeit",          emoji: "🏛", defaultHours: 3, bg: "rgba(219,234,254,0.35)", color: "#1E40AF" },
-  ag:              { label: "AG",              emoji: "📚", defaultHours: 2, bg: "rgba(209,250,229,0.45)", color: "#065F46" },
-  examensklausur:  { label: "Examensklausur",  emoji: "⚖", defaultHours: 1, bg: "rgba(254,240,138,0.55)", color: "#854D0E" },
-  privat:          { label: "Privat",          emoji: "🏠", defaultHours: 6, bg: "rgba(237,233,254,0.45)", color: "#7C3AED" },
-  urlaub:          { label: "Urlaub",          emoji: "🏖", defaultHours: 0, bg: "rgba(254,215,170,0.45)", color: "#C2410C" },
-  krank:           { label: "Krank",           emoji: "🤒", defaultHours: 0, bg: "rgba(254,202,202,0.45)", color: "#B91C1C" },
-  reise:           { label: "Reise",           emoji: "✈", defaultHours: 0, bg: "rgba(224,242,254,0.45)", color: "#0369A1" },
-  feiertag:        { label: "Feiertag",        emoji: "🎉", defaultHours: 0, bg: "rgba(254,226,226,0.45)", color: "#BE123C" },
-  sonstiges:       { label: "Sonstiges",       emoji: "➕", defaultHours: 4, bg: "rgba(241,245,249,0.55)", color: "#475569" },
+  arbeit:          { label: "Arbeit",          emoji: "🏛", defaultHours: 3, bg: "rgba(219,234,254,0.28)", color: "#2563EB" },
+  ag:              { label: "AG",              emoji: "📚", defaultHours: 2, bg: "rgba(209,250,229,0.32)", color: "#047857" },
+  examensklausur:  { label: "Examensklausur",  emoji: "⚖", defaultHours: 1, bg: "rgba(254,240,138,0.38)", color: "#A16207" },
+  privat:          { label: "Privat",          emoji: "🏠", defaultHours: 6, bg: "rgba(237,233,254,0.32)", color: "#6D28D9" },
+  urlaub:          { label: "Urlaub",          emoji: "🏖", defaultHours: 0, bg: "rgba(254,215,170,0.32)", color: "#C2410C" },
+  krank:           { label: "Krank",           emoji: "🤒", defaultHours: 0, bg: "rgba(254,202,202,0.32)", color: "#DC2626" },
+  reise:           { label: "Reise",           emoji: "✈", defaultHours: 0, bg: "rgba(224,242,254,0.32)", color: "#0284C7" },
+  feiertag:        { label: "Feiertag",        emoji: "🎉", defaultHours: 0, bg: "rgba(254,226,226,0.32)", color: "#DB2777" },
+  sonstiges:       { label: "Sonstiges",       emoji: "➕", defaultHours: 4, bg: "rgba(245,243,239,0.55)", color: "#57534E" },
 };
 
 /** Ungeplante Tage zählen als voller Lerntag (8h). */

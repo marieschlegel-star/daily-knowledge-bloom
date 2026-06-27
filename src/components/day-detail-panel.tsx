@@ -1,5 +1,5 @@
 
-import { X, Plus, Trash2 } from "lucide-react";
+import { X, Plus } from "lucide-react";
 import { format, isSameDay, parseISO } from "date-fns";
 import { de } from "date-fns/locale";
 import { resolveGrundConfig } from "@/lib/day-grund";
@@ -17,7 +17,6 @@ interface DayDetailPanelProps {
   onClose: () => void;
   onNewLernblock: (date: Date) => void;
   onSessionClick: (id: string) => void;
-  onDeleteSession?: (id: string) => void;
   onOpenDayPlan?: () => void;
 }
 
@@ -29,7 +28,6 @@ export function DayDetailPanel({
   onClose,
   onNewLernblock,
   onSessionClick,
-  onDeleteSession,
   onOpenDayPlan,
 }: DayDetailPanelProps) {
   const dateStr = format(date, "yyyy-MM-dd");
@@ -159,16 +157,6 @@ export function DayDetailPanel({
                       </div>
                       <FachChip fach={s.subject} />
                     </button>
-                    {onDeleteSession && (
-                      <button
-                        type="button"
-                        aria-label="Lernblock löschen"
-                        onClick={() => onDeleteSession(s.id)}
-                        className="shrink-0 mr-2 p-1.5 rounded-lg hover:bg-red-100 text-red-500 transition-colors"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    )}
                   </div>
                 );
               })}

@@ -12,12 +12,12 @@ export function FachChip({ fach, size = "sm", className }: FachChipProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full font-medium shrink-0",
-        size === "xs" && "px-1.5 py-0.5 text-[10px]",
-        size === "sm" && "px-2 py-0.5 text-xs",
+        "inline-flex items-center rounded-md font-medium shrink-0 border",
+        size === "xs" && "px-1.5 py-0.5 text-meta",
+        size === "sm" && "px-2 py-0.5 text-label",
         className
       )}
-      style={{ background: colors.bg, color: colors.text }}
+      style={{ background: colors.bg, color: colors.text, borderColor: colors.border }}
     >
       {fach ?? "–"}
     </span>

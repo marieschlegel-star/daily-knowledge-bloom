@@ -68,16 +68,3 @@ export async function notionUpdatePage(pageId: string, properties: object): Prom
     throw new Error(`Notion API ${res.status}: ${err}`);
   }
 }
-
-export async function notionArchivePage(pageId: string): Promise<void> {
-  const res = await fetch(`${GATEWAY}/pages/${pageId}`, {
-    method: "PATCH",
-    headers: headers(),
-    body: JSON.stringify({ archived: true }),
-  });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Notion API ${res.status}: ${err}`);
-  }
-}

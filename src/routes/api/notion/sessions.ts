@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { notionQuery, notionUpdatePage, notionCreatePage, notionArchivePage } from "@/lib/notion-fetch.server";
+import { notionQuery, notionUpdatePage, notionCreatePage } from "@/lib/notion-fetch.server";
 import type { LernSession, Fach, LernStatus, Priority } from "@/lib/types";
 
 export const Route = createFileRoute("/api/notion/sessions")({
@@ -63,16 +63,6 @@ export const Route = createFileRoute("/api/notion/sessions")({
           if (duration !== undefined) props.Duration = { number: duration };
           if (Object.keys(props).length === 0) return Response.json({ error: "Nothing to update" }, { status: 400 });
           await notionUpdatePage(id, props);
-          return Response.json({ success: true });
-        } catch (e: any) {
-          return Response.json({ error: e.message }, { status: 500 });
-        }
-      },
-      DELETE: async ({ request }) => {
-        try {
-          const { id } = await request.json();
-          if (!id) return Response.json({ error: "ID required" }, { status: 400 });
-          await notionArchivePage(id);
           return Response.json({ success: true });
         } catch (e: any) {
           return Response.json({ error: e.message }, { status: 500 });

@@ -182,19 +182,19 @@ export function CalendarViewComponent({
 
           return (
             <div
-              className="flex flex-col items-center gap-0.5 py-1 cursor-pointer group w-full"
+              className="flex flex-col items-center gap-1 py-1.5 px-1 cursor-pointer group w-full rounded-lg hover:bg-muted/40 transition-colors"
               onClick={() => onDayHeaderClick?.(arg.date)}
               title="Tagesplanung"
             >
-              <span className={`text-[11px] font-semibold transition-colors group-hover:text-primary ${isToday ? "text-primary" : "text-foreground/80"}`}>
+              <span className={`text-label font-medium transition-colors group-hover:text-primary ${isToday ? "text-primary" : "text-foreground/85"}`}>
                 {format(arg.date, "EEE d.", { locale: de })}
               </span>
               {plan && cfg ? (
-                <span className="text-[9px] font-medium leading-tight text-center px-0.5" style={{ color: cfg.color }}>
+                <span className="text-meta font-medium leading-tight text-center px-0.5" style={{ color: cfg.color }}>
                   {formatDayPlanLabel(plan.grund, plan.hours, customGrunds)}
                 </span>
               ) : (
-                <span className="text-[9px] text-transparent group-hover:text-muted-foreground transition-colors">
+                <span className="text-meta text-transparent group-hover:text-muted-foreground transition-colors">
                   + Planen
                 </span>
               )}

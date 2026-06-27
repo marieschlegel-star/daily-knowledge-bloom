@@ -102,20 +102,20 @@ export function DayPlanDialog({ date, onClose }: DayPlanDialogProps) {
           "flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 px-2 py-3 transition-all",
           active
             ? "border-primary bg-primary/5 shadow-sm"
-            : "border-transparent bg-slate-50 hover:bg-slate-100 hover:border-border"
+            : "border-transparent bg-card hover:bg-muted/50 hover:border-border"
         )}
       >
         <span className="text-2xl leading-none">{emoji}</span>
-        <span className="text-[11px] font-medium text-foreground text-center leading-tight">{label}</span>
+        <span className="text-label font-medium text-foreground text-center leading-tight">{label}</span>
       </button>
     );
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
       <div
-        className="relative bg-white rounded-2xl shadow-2xl border border-border w-full max-w-[420px] max-h-[90vh] overflow-hidden flex flex-col"
+        className="relative bg-card rounded-2xl shadow-panel border border-border w-full max-w-[420px] max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-5 pt-5 pb-4 shrink-0 border-b border-border/60">
@@ -159,7 +159,7 @@ export function DayPlanDialog({ date, onClose }: DayPlanDialogProps) {
 
           {customGrunds.length > 0 && (
             <div className="space-y-2">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-0.5">
+              <p className="text-meta font-semibold text-muted-foreground uppercase tracking-wider px-0.5">
                 Deine Kategorien
               </p>
               <div className="grid grid-cols-3 gap-2">
@@ -169,7 +169,7 @@ export function DayPlanDialog({ date, onClose }: DayPlanDialogProps) {
                 {customGrunds.map((c) => (
                   <div
                     key={`manage-${c.id}`}
-                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-50 border border-border"
+                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-muted/40 border border-border"
                   >
                     <span className="text-sm">{c.emoji}</span>
                     <span className="text-xs text-foreground flex-1 truncate">{c.label}</span>
@@ -187,7 +187,7 @@ export function DayPlanDialog({ date, onClose }: DayPlanDialogProps) {
             </div>
           )}
 
-          <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-3 space-y-2.5">
+          <div className="rounded-xl border border-primary/15 bg-primary/[0.03] p-3 space-y-2.5">
             <p className="text-xs font-semibold text-primary">Eigene Kategorie hinzufügen</p>
             <input
               ref={nameInputRef}
@@ -196,7 +196,7 @@ export function DayPlanDialog({ date, onClose }: DayPlanDialogProps) {
               onChange={(e) => setNewLabel(e.target.value)}
               onFocus={() => setShowAddForm(true)}
               placeholder="Name, z. B. Repetitorium"
-              className="w-full text-sm px-3 py-2 rounded-xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full text-sm px-3 py-2 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
             <div className="flex flex-wrap gap-1">
               {EMOJI_SUGGESTIONS.map((e) => (
@@ -206,7 +206,7 @@ export function DayPlanDialog({ date, onClose }: DayPlanDialogProps) {
                   onClick={() => setNewEmoji(e)}
                   className={cn(
                     "w-8 h-8 rounded-lg text-lg flex items-center justify-center transition-colors",
-                    newEmoji === e ? "bg-primary/15 ring-2 ring-primary/30" : "bg-white hover:bg-slate-50"
+                    newEmoji === e ? "bg-primary/15 ring-2 ring-primary/30" : "bg-card hover:bg-muted/50"
                   )}
                 >
                   {e}
@@ -220,10 +220,10 @@ export function DayPlanDialog({ date, onClose }: DayPlanDialogProps) {
                   type="button"
                   onClick={() => setNewDefaultHours(h)}
                   className={cn(
-                    "px-2 py-0.5 rounded-md text-[10px] font-semibold transition-colors",
+                    "px-2 py-0.5 rounded-md text-meta font-semibold transition-colors",
                     newDefaultHours === h
                       ? "bg-primary text-white"
-                      : "bg-white text-foreground border border-border"
+                      : "bg-card text-foreground border border-border"
                   )}
                 >
                   {h}h
@@ -264,7 +264,7 @@ export function DayPlanDialog({ date, onClose }: DayPlanDialogProps) {
                       "min-w-[2.5rem] px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors",
                       hours === h
                         ? "bg-primary text-white"
-                        : "bg-slate-100 text-foreground hover:bg-slate-200"
+                        : "bg-muted text-foreground hover:bg-muted/80"
                     )}
                   >
                     {h}h
@@ -282,7 +282,7 @@ export function DayPlanDialog({ date, onClose }: DayPlanDialogProps) {
                   onChange={(e) => setHours(Number(e.target.value))}
                   className="w-full accent-primary"
                 />
-                <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                <div className="flex justify-between text-meta text-muted-foreground mt-1">
                   <span>0h</span>
                   <span>8h</span>
                 </div>
