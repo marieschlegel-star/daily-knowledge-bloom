@@ -17,6 +17,7 @@ import { Route as ApiNotionTodosRouteImport } from './routes/api/notion/todos'
 import { Route as ApiNotionSessionsRouteImport } from './routes/api/notion/sessions'
 import { Route as ApiNotionKlausurenRouteImport } from './routes/api/notion/klausuren'
 import { Route as ApiNotionHealthRouteImport } from './routes/api/notion/health'
+import { Route as ApiGoogleConfigRouteImport } from './routes/api/google/config'
 import { Route as ApiAiChatRouteImport } from './routes/api/ai/chat'
 
 const TodosRoute = TodosRouteImport.update({
@@ -59,6 +60,11 @@ const ApiNotionHealthRoute = ApiNotionHealthRouteImport.update({
   path: '/api/notion/health',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGoogleConfigRoute = ApiGoogleConfigRouteImport.update({
+  id: '/api/google/config',
+  path: '/api/google/config',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAiChatRoute = ApiAiChatRouteImport.update({
   id: '/api/ai/chat',
   path: '/api/ai/chat',
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/staatsexamen': typeof StaatsexamenRoute
   '/todos': typeof TodosRoute
   '/api/ai/chat': typeof ApiAiChatRoute
+  '/api/google/config': typeof ApiGoogleConfigRoute
   '/api/notion/health': typeof ApiNotionHealthRoute
   '/api/notion/klausuren': typeof ApiNotionKlausurenRoute
   '/api/notion/sessions': typeof ApiNotionSessionsRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/staatsexamen': typeof StaatsexamenRoute
   '/todos': typeof TodosRoute
   '/api/ai/chat': typeof ApiAiChatRoute
+  '/api/google/config': typeof ApiGoogleConfigRoute
   '/api/notion/health': typeof ApiNotionHealthRoute
   '/api/notion/klausuren': typeof ApiNotionKlausurenRoute
   '/api/notion/sessions': typeof ApiNotionSessionsRoute
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/staatsexamen': typeof StaatsexamenRoute
   '/todos': typeof TodosRoute
   '/api/ai/chat': typeof ApiAiChatRoute
+  '/api/google/config': typeof ApiGoogleConfigRoute
   '/api/notion/health': typeof ApiNotionHealthRoute
   '/api/notion/klausuren': typeof ApiNotionKlausurenRoute
   '/api/notion/sessions': typeof ApiNotionSessionsRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/staatsexamen'
     | '/todos'
     | '/api/ai/chat'
+    | '/api/google/config'
     | '/api/notion/health'
     | '/api/notion/klausuren'
     | '/api/notion/sessions'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/staatsexamen'
     | '/todos'
     | '/api/ai/chat'
+    | '/api/google/config'
     | '/api/notion/health'
     | '/api/notion/klausuren'
     | '/api/notion/sessions'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/staatsexamen'
     | '/todos'
     | '/api/ai/chat'
+    | '/api/google/config'
     | '/api/notion/health'
     | '/api/notion/klausuren'
     | '/api/notion/sessions'
@@ -141,6 +153,7 @@ export interface RootRouteChildren {
   StaatsexamenRoute: typeof StaatsexamenRoute
   TodosRoute: typeof TodosRoute
   ApiAiChatRoute: typeof ApiAiChatRoute
+  ApiGoogleConfigRoute: typeof ApiGoogleConfigRoute
   ApiNotionHealthRoute: typeof ApiNotionHealthRoute
   ApiNotionKlausurenRoute: typeof ApiNotionKlausurenRoute
   ApiNotionSessionsRoute: typeof ApiNotionSessionsRoute
@@ -205,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiNotionHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/google/config': {
+      id: '/api/google/config'
+      path: '/api/google/config'
+      fullPath: '/api/google/config'
+      preLoaderRoute: typeof ApiGoogleConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/ai/chat': {
       id: '/api/ai/chat'
       path: '/api/ai/chat'
@@ -221,6 +241,7 @@ const rootRouteChildren: RootRouteChildren = {
   StaatsexamenRoute: StaatsexamenRoute,
   TodosRoute: TodosRoute,
   ApiAiChatRoute: ApiAiChatRoute,
+  ApiGoogleConfigRoute: ApiGoogleConfigRoute,
   ApiNotionHealthRoute: ApiNotionHealthRoute,
   ApiNotionKlausurenRoute: ApiNotionKlausurenRoute,
   ApiNotionSessionsRoute: ApiNotionSessionsRoute,

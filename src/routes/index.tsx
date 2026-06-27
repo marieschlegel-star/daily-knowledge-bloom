@@ -24,8 +24,9 @@ import {
   DUMMY_TODOS,
   DUMMY_POMODOROS,
 } from "@/lib/dummy-data";
-import type { LernSession, Klausur, Todo, GCalEvent } from "@/lib/types";
+import type { LernSession, Klausur, Todo } from "@/lib/types";
 import { isNotionPageId } from "@/lib/notion-guards";
+import { useGCalEvents } from "@/lib/use-gcal";
 
 async function fetchJsonOrFallback<T>(url: string, fallback: T): Promise<T> {
   try {
@@ -59,6 +60,7 @@ function HomePage() {
   const qc = useQueryClient();
   const { selectedSessionId, setSelectedSessionId, calendarView, filters, toggleFach, toggleTodoKategorie } = useAppStore();
   const [calTitle, setCalTitle] = useState("KW 26 · Juni 2026");
+  const [calRange, setCalRange] = useState<{ start: Date; end: Date } | null>(null);
   const [quickCreate, setQuickCreate] = useState<{ date: Date; allDay: boolean; prefill?: QuickCreatePrefill } | null>(null);
   const [pickerDate, setPickerDate] = useState<Date | null>(null);
   const [detailDate, setDetailDate] = useState<Date | null>(null);
@@ -83,7 +85,7 @@ function HomePage() {
     staleTime: 30_000,
   });
 
-  const gcalEvents: GCalEvent[] = [];
+  const gcalEvents = useGCalEvents(calRange);
 
   // ─── Mutations ────────────────────────────────────────────────────
   const updateSessionDate = useMutation({
@@ -197,6 +199,8 @@ function HomePage() {
   const handleDatesSet = useCallback(
     (info: any) => {
       const start: Date = info.start;
+      const end: Date = info.end;
+      setCalRange({ start, end });
       const kw = getISOWeek(start);
       if (info.view.type === "timeGridDay") {
         setCalTitle(format(start, "EEEE, dd. MMMM yyyy", { locale: de }));

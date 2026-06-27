@@ -15,6 +15,7 @@ import { useDayStore } from "@/lib/day-store";
 import { useExamenStore } from "@/lib/examen-store";
 import { useLernblockStore } from "@/lib/lernblock-store";
 import { useThemenStore } from "@/lib/themen-store";
+import { useGCalStore } from "@/lib/gcal-store";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
@@ -79,6 +80,7 @@ function RootComponent() {
       useExamenStore.persist.rehydrate(),
       useLernblockStore.persist.rehydrate(),
       useThemenStore.persist.rehydrate(),
+      useGCalStore.persist.rehydrate(),
     ]);
   }, []);
 

@@ -138,6 +138,7 @@ export interface GCalEvent {
   title: string;
   start: string;
   end: string;
+  allDay?: boolean;
   calendarId: string;
   calendarName: string;
   color?: string;

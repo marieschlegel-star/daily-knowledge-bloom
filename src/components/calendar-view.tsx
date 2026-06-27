@@ -133,13 +133,16 @@ export function CalendarViewComponent({
 
     gcalEvents.forEach((e) => {
       if (visibility.gcal[e.calendarId] === false) return;
+      const bg = e.color ? `${e.color}33` : "#F1EFE8";
+      const border = e.color ?? "#E5E0D5";
       events.push({
         id: `gcal-${e.id}`,
         title: e.title,
         start: e.start,
         end: e.end,
-        backgroundColor: "#F1EFE8",
-        borderColor: "#E5E0D5",
+        allDay: e.allDay,
+        backgroundColor: bg,
+        borderColor: border,
         textColor: "#5F5E5A",
         editable: false,
         extendedProps: { type: "gcal" },
