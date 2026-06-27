@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { X, Brain, HelpCircle, List, CreditCard, PenLine, Calendar, ExternalLink, FileText, Loader2, Timer } from "lucide-react";
+import { X, Brain, HelpCircle, List, CreditCard, PenLine, Calendar, ExternalLink, FileText, Loader2, Timer, CalendarOff } from "lucide-react";
 import { PomodoroTimer } from "./pomodoro-timer";
 import { cn, daysUntil, countdownLabel, getFachColors, formatDuration, priorityDot } from "@/lib/utils";
 import { FachChip } from "./fach-chip";
@@ -18,6 +18,7 @@ interface SessionPanelProps {
   klausuren: Klausur[];
   pomodoros: PomodoroSession[];
   onClose: () => void;
+  onClearDate?: () => void;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -42,7 +43,7 @@ const AI_BUTTONS: { action: AIAction; label: string; icon: React.ReactNode; warn
   { action: "optimieren", label: "Plan optimieren", icon: <Calendar className="h-3.5 w-3.5" /> },
 ];
 
-export function SessionPanel({ session, klausuren, pomodoros, onClose }: SessionPanelProps) {
+export function SessionPanel({ session, klausuren, pomodoros, onClose, onClearDate }: SessionPanelProps) {
   const { aiCallCount, incrementAiCallCount } = useAppStore();
   const { meta, setMeta } = useLernblockStore();
   const lbMeta = meta[session.id] ?? {};
@@ -168,6 +169,22 @@ export function SessionPanel({ session, klausuren, pomodoros, onClose }: Session
             <Progress value={progress} className="h-1.5" />
           </div>
         </div>
+
+        {session.date && onClearDate && (
+          <div className="px-4 py-2 border-b border-border">
+            <button
+              type="button"
+              onClick={onClearDate}
+              className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-medium rounded-xl border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+            >
+              <CalendarOff className="h-3.5 w-3.5" />
+              Termin aus Kalender entfernen
+            </button>
+            <p className="text-meta text-center mt-1.5 px-1">
+              Entfernt nur das Datum — die Lerneinheit bleibt in Notion.
+            </p>
+          </div>
+        )}
 
         {/* ── Planungsstatus + Zusatzfelder ──────────────────── */}
         <div className="px-4 py-3 border-b border-border space-y-3">

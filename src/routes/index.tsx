@@ -88,7 +88,7 @@ function HomePage() {
   // ─── Mutations ────────────────────────────────────────────────────
   const updateSessionDate = useMutation({
     mutationFn: async ({ id, date }: { id: string; date: string | null }) => {
-      if (!isNotionPageId(id) || !date) return;
+      if (!isNotionPageId(id)) return;
       await notionWrite("/api/notion/sessions", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -175,6 +175,23 @@ function HomePage() {
       updateSessionDate.mutate({ id: sessionId, date: newDate });
     },
     [updateSessionDate]
+  );
+
+  const handleClearSessionDate = useCallback(
+    (sessionId: string) => {
+      updateSessionDate.mutate(
+        { id: sessionId, date: null },
+        {
+          onSuccess: () => {
+            toast.success("Termin entfernt", {
+              description: "Die Lerneinheit bleibt in Notion erhalten und erscheint in der Seitenleiste.",
+            });
+            setSelectedSessionId(null);
+          },
+        }
+      );
+    },
+    [updateSessionDate, setSelectedSessionId]
   );
 
   const handleDatesSet = useCallback(
@@ -342,6 +359,7 @@ function HomePage() {
             klausuren={klausuren}
             pomodoros={DUMMY_POMODOROS}
             onClose={() => setSelectedSessionId(null)}
+            onClearDate={() => handleClearSessionDate(selectedSession.id)}
           />
         ) : selectedKlausur ? (
           <KlausurPanel
@@ -357,6 +375,7 @@ function HomePage() {
             onClose={() => setDetailDate(null)}
             onNewLernblock={(date) => { setDetailDate(null); setQuickCreate({ date, allDay: false }); }}
             onSessionClick={(id) => { setDetailDate(null); setSelectedSessionId(id); }}
+            onClearSessionDate={handleClearSessionDate}
             onOpenDayPlan={() => setPickerDate(detailDate)}
           />
         ) : (

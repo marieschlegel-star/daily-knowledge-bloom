@@ -1,5 +1,5 @@
 
-import { X, Plus } from "lucide-react";
+import { X, Plus, CalendarOff } from "lucide-react";
 import { format, isSameDay, parseISO } from "date-fns";
 import { de } from "date-fns/locale";
 import { resolveGrundConfig } from "@/lib/day-grund";
@@ -17,6 +17,7 @@ interface DayDetailPanelProps {
   onClose: () => void;
   onNewLernblock: (date: Date) => void;
   onSessionClick: (id: string) => void;
+  onClearSessionDate?: (id: string) => void;
   onOpenDayPlan?: () => void;
 }
 
@@ -28,6 +29,7 @@ export function DayDetailPanel({
   onClose,
   onNewLernblock,
   onSessionClick,
+  onClearSessionDate,
   onOpenDayPlan,
 }: DayDetailPanelProps) {
   const dateStr = format(date, "yyyy-MM-dd");
@@ -157,6 +159,17 @@ export function DayDetailPanel({
                       </div>
                       <FachChip fach={s.subject} />
                     </button>
+                    {onClearSessionDate && (
+                      <button
+                        type="button"
+                        aria-label="Termin aus Kalender entfernen"
+                        title="Termin entfernen (bleibt in Notion)"
+                        onClick={() => onClearSessionDate(s.id)}
+                        className="shrink-0 mr-2 p-1.5 rounded-lg hover:bg-black/5 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <CalendarOff className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                   </div>
                 );
               })}

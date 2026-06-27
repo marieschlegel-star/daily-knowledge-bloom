@@ -60,13 +60,8 @@ export const Route = createFileRoute("/api/notion/sessions")({
           if (!id) return Response.json({ error: "ID required" }, { status: 400 });
           const props: Record<string, unknown> = {};
           if (date !== undefined) {
-            if (!date) {
-              return Response.json(
-                { error: "Notion-Termine können in der App nicht gelöscht werden — nur verschoben." },
-                { status: 400 }
-              );
-            }
-            props.Date = { date: { start: date } };
+            // Nur das Datumsfeld leeren — die Notion-Seite bleibt erhalten.
+            props.Date = date ? { date: { start: date } } : { date: null };
           }
           if (duration !== undefined) props.Duration = { number: duration };
           if (Object.keys(props).length === 0) return Response.json({ error: "Nothing to update" }, { status: 400 });
