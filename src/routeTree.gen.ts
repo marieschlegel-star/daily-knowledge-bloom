@@ -17,7 +17,9 @@ import { Route as ApiNotionTodosRouteImport } from './routes/api/notion/todos'
 import { Route as ApiNotionSessionsRouteImport } from './routes/api/notion/sessions'
 import { Route as ApiNotionKlausurenRouteImport } from './routes/api/notion/klausuren'
 import { Route as ApiNotionHealthRouteImport } from './routes/api/notion/health'
+import { Route as ApiGoogleEventsRouteImport } from './routes/api/google/events'
 import { Route as ApiGoogleConfigRouteImport } from './routes/api/google/config'
+import { Route as ApiGoogleCalendarsRouteImport } from './routes/api/google/calendars'
 import { Route as ApiAiChatRouteImport } from './routes/api/ai/chat'
 
 const TodosRoute = TodosRouteImport.update({
@@ -60,9 +62,19 @@ const ApiNotionHealthRoute = ApiNotionHealthRouteImport.update({
   path: '/api/notion/health',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGoogleEventsRoute = ApiGoogleEventsRouteImport.update({
+  id: '/api/google/events',
+  path: '/api/google/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiGoogleConfigRoute = ApiGoogleConfigRouteImport.update({
   id: '/api/google/config',
   path: '/api/google/config',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGoogleCalendarsRoute = ApiGoogleCalendarsRouteImport.update({
+  id: '/api/google/calendars',
+  path: '/api/google/calendars',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAiChatRoute = ApiAiChatRouteImport.update({
@@ -77,7 +89,9 @@ export interface FileRoutesByFullPath {
   '/staatsexamen': typeof StaatsexamenRoute
   '/todos': typeof TodosRoute
   '/api/ai/chat': typeof ApiAiChatRoute
+  '/api/google/calendars': typeof ApiGoogleCalendarsRoute
   '/api/google/config': typeof ApiGoogleConfigRoute
+  '/api/google/events': typeof ApiGoogleEventsRoute
   '/api/notion/health': typeof ApiNotionHealthRoute
   '/api/notion/klausuren': typeof ApiNotionKlausurenRoute
   '/api/notion/sessions': typeof ApiNotionSessionsRoute
@@ -89,7 +103,9 @@ export interface FileRoutesByTo {
   '/staatsexamen': typeof StaatsexamenRoute
   '/todos': typeof TodosRoute
   '/api/ai/chat': typeof ApiAiChatRoute
+  '/api/google/calendars': typeof ApiGoogleCalendarsRoute
   '/api/google/config': typeof ApiGoogleConfigRoute
+  '/api/google/events': typeof ApiGoogleEventsRoute
   '/api/notion/health': typeof ApiNotionHealthRoute
   '/api/notion/klausuren': typeof ApiNotionKlausurenRoute
   '/api/notion/sessions': typeof ApiNotionSessionsRoute
@@ -102,7 +118,9 @@ export interface FileRoutesById {
   '/staatsexamen': typeof StaatsexamenRoute
   '/todos': typeof TodosRoute
   '/api/ai/chat': typeof ApiAiChatRoute
+  '/api/google/calendars': typeof ApiGoogleCalendarsRoute
   '/api/google/config': typeof ApiGoogleConfigRoute
+  '/api/google/events': typeof ApiGoogleEventsRoute
   '/api/notion/health': typeof ApiNotionHealthRoute
   '/api/notion/klausuren': typeof ApiNotionKlausurenRoute
   '/api/notion/sessions': typeof ApiNotionSessionsRoute
@@ -116,7 +134,9 @@ export interface FileRouteTypes {
     | '/staatsexamen'
     | '/todos'
     | '/api/ai/chat'
+    | '/api/google/calendars'
     | '/api/google/config'
+    | '/api/google/events'
     | '/api/notion/health'
     | '/api/notion/klausuren'
     | '/api/notion/sessions'
@@ -128,7 +148,9 @@ export interface FileRouteTypes {
     | '/staatsexamen'
     | '/todos'
     | '/api/ai/chat'
+    | '/api/google/calendars'
     | '/api/google/config'
+    | '/api/google/events'
     | '/api/notion/health'
     | '/api/notion/klausuren'
     | '/api/notion/sessions'
@@ -140,7 +162,9 @@ export interface FileRouteTypes {
     | '/staatsexamen'
     | '/todos'
     | '/api/ai/chat'
+    | '/api/google/calendars'
     | '/api/google/config'
+    | '/api/google/events'
     | '/api/notion/health'
     | '/api/notion/klausuren'
     | '/api/notion/sessions'
@@ -153,7 +177,9 @@ export interface RootRouteChildren {
   StaatsexamenRoute: typeof StaatsexamenRoute
   TodosRoute: typeof TodosRoute
   ApiAiChatRoute: typeof ApiAiChatRoute
+  ApiGoogleCalendarsRoute: typeof ApiGoogleCalendarsRoute
   ApiGoogleConfigRoute: typeof ApiGoogleConfigRoute
+  ApiGoogleEventsRoute: typeof ApiGoogleEventsRoute
   ApiNotionHealthRoute: typeof ApiNotionHealthRoute
   ApiNotionKlausurenRoute: typeof ApiNotionKlausurenRoute
   ApiNotionSessionsRoute: typeof ApiNotionSessionsRoute
@@ -218,11 +244,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiNotionHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/google/events': {
+      id: '/api/google/events'
+      path: '/api/google/events'
+      fullPath: '/api/google/events'
+      preLoaderRoute: typeof ApiGoogleEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/google/config': {
       id: '/api/google/config'
       path: '/api/google/config'
       fullPath: '/api/google/config'
       preLoaderRoute: typeof ApiGoogleConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/google/calendars': {
+      id: '/api/google/calendars'
+      path: '/api/google/calendars'
+      fullPath: '/api/google/calendars'
+      preLoaderRoute: typeof ApiGoogleCalendarsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/ai/chat': {
@@ -241,7 +281,9 @@ const rootRouteChildren: RootRouteChildren = {
   StaatsexamenRoute: StaatsexamenRoute,
   TodosRoute: TodosRoute,
   ApiAiChatRoute: ApiAiChatRoute,
+  ApiGoogleCalendarsRoute: ApiGoogleCalendarsRoute,
   ApiGoogleConfigRoute: ApiGoogleConfigRoute,
+  ApiGoogleEventsRoute: ApiGoogleEventsRoute,
   ApiNotionHealthRoute: ApiNotionHealthRoute,
   ApiNotionKlausurenRoute: ApiNotionKlausurenRoute,
   ApiNotionSessionsRoute: ApiNotionSessionsRoute,
@@ -250,3 +292,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
