@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { RechtsgebietGruppe } from "./types";
+import { clientJSONStorage } from "./client-storage";
 
 // 8 Rechtsgebiete als Gerüst — Unterthemen pflegt die Nutzerin selbst.
 // Bewusst leere themen-Arrays: nichts wird vorgegeben/"ausgedacht".
@@ -51,6 +52,10 @@ export const useThemenStore = create<ThemenStoreState>()(
         })),
       resetGruppen: () => set({ gruppen: DEFAULT_GRUPPEN }),
     }),
-    { name: "juris-themen" }
+    {
+      name: "juris-themen",
+      storage: clientJSONStorage,
+      skipHydration: true,
+    }
   )
 );

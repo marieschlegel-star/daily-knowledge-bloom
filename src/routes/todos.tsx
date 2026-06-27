@@ -8,6 +8,7 @@ import { format, parseISO } from "date-fns";
 import { de } from "date-fns/locale";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { isNotionPageId } from "@/lib/notion-guards";
 import type { Todo, TodoKategorie } from "@/lib/types";
 
 const KATEGORIEN: (TodoKategorie | "Ohne")[] = ["Lernen", "KK", "AssK", "AG", "Ohne"];
@@ -43,6 +44,7 @@ function TodosPage() {
 
   const toggle = useMutation({
     mutationFn: async ({ id, completed }: { id: string; completed: boolean }) => {
+      if (!isNotionPageId(id)) return;
       const res = await fetch("/api/notion/todos", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },

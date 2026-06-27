@@ -59,7 +59,15 @@ export const Route = createFileRoute("/api/notion/sessions")({
           const { id, date, duration } = await request.json();
           if (!id) return Response.json({ error: "ID required" }, { status: 400 });
           const props: Record<string, unknown> = {};
-          if (date !== undefined) props.Date = date ? { date: { start: date } } : { date: null };
+          if (date !== undefined) {
+            if (!date) {
+              return Response.json(
+                { error: "Notion-Termine können in der App nicht gelöscht werden — nur verschoben." },
+                { status: 400 }
+              );
+            }
+            props.Date = { date: { start: date } };
+          }
           if (duration !== undefined) props.Duration = { number: duration };
           if (Object.keys(props).length === 0) return Response.json({ error: "Nothing to update" }, { status: 400 });
           await notionUpdatePage(id, props);
@@ -68,6 +76,11 @@ export const Route = createFileRoute("/api/notion/sessions")({
           return Response.json({ error: e.message }, { status: 500 });
         }
       },
+      DELETE: async () =>
+        Response.json(
+          { error: "Notion-Lerneinheiten können in der App nicht gelöscht werden." },
+          { status: 403 }
+        ),
     },
   },
 });

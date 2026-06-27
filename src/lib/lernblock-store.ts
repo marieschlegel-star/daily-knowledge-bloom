@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { LernblockMeta } from "./types";
+import { clientJSONStorage } from "./client-storage";
 
 interface LernblockStoreState {
   // Zusatz-Metadaten je Lernblock, key = sessionId
@@ -31,6 +32,10 @@ export const useLernblockStore = create<LernblockStoreState>()(
       setDayNote: (dateStr, note) =>
         set((s) => ({ dayNotes: { ...s.dayNotes, [dateStr]: note } })),
     }),
-    { name: "juris-lernblock-meta" }
+    {
+      name: "juris-lernblock-meta",
+      storage: clientJSONStorage,
+      skipHydration: true,
+    }
   )
 );

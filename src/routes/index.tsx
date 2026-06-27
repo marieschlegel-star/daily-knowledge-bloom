@@ -25,6 +25,7 @@ import {
   DUMMY_POMODOROS,
 } from "@/lib/dummy-data";
 import type { LernSession, Klausur, Todo, GCalEvent } from "@/lib/types";
+import { isNotionPageId } from "@/lib/notion-guards";
 
 async function fetchJsonOrFallback<T>(url: string, fallback: T): Promise<T> {
   try {
@@ -87,6 +88,7 @@ function HomePage() {
   // ─── Mutations ────────────────────────────────────────────────────
   const updateSessionDate = useMutation({
     mutationFn: async ({ id, date }: { id: string; date: string | null }) => {
+      if (!isNotionPageId(id) || !date) return;
       await notionWrite("/api/notion/sessions", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -101,13 +103,18 @@ function HomePage() {
       );
       return { prev };
     },
-    onError: (_e, _v, ctx) => {
+    onError: (error, _v, ctx) => {
       if (ctx?.prev) qc.setQueryData(["sessions"], ctx.prev);
+      toast.error("Termin konnte nicht gespeichert werden", {
+        description: error instanceof Error ? error.message : undefined,
+      });
     },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["sessions"] }),
   });
 
   const updateSessionDuration = useMutation({
     mutationFn: async ({ id, duration }: { id: string; duration: number }) => {
+      if (!isNotionPageId(id)) return;
       await notionWrite("/api/notion/sessions", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -122,13 +129,18 @@ function HomePage() {
       );
       return { prev };
     },
-    onError: (_e, _v, ctx) => {
+    onError: (error, _v, ctx) => {
       if (ctx?.prev) qc.setQueryData(["sessions"], ctx.prev);
+      toast.error("Dauer konnte nicht gespeichert werden", {
+        description: error instanceof Error ? error.message : undefined,
+      });
     },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["sessions"] }),
   });
 
   const completeTodo = useMutation({
     mutationFn: async ({ id, completed }: { id: string; completed: boolean }) => {
+      if (!isNotionPageId(id)) return;
       await notionWrite("/api/notion/todos", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },

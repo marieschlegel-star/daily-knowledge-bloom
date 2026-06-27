@@ -79,6 +79,11 @@ export const Route = createFileRoute("/api/notion/todos")({
           return Response.json({ error: e.message }, { status: 500 });
         }
       },
+      DELETE: async () =>
+        Response.json(
+          { error: "Notion-To-Dos können in der App nicht gelöscht werden." },
+          { status: 403 }
+        ),
     },
   },
 });

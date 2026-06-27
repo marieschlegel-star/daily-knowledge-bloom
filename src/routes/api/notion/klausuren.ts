@@ -34,6 +34,11 @@ export const Route = createFileRoute("/api/notion/klausuren")({
           return Response.json({ error: e.message }, { status: 500 });
         }
       },
+      DELETE: async () =>
+        Response.json(
+          { error: "Notion-Klausuren können in der App nicht gelöscht werden." },
+          { status: 403 }
+        ),
     },
   },
 });

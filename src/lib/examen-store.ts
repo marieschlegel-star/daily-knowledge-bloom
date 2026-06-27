@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { clientJSONStorage } from "./client-storage";
 
 interface ExamenState {
   examDate: string | null;
@@ -12,6 +13,10 @@ export const useExamenStore = create<ExamenState>()(
       examDate: null,
       setExamDate: (date) => set({ examDate: date }),
     }),
-    { name: "juris-staatsexamen" }
+    {
+      name: "juris-staatsexamen",
+      storage: clientJSONStorage,
+      skipHydration: true,
+    }
   )
 );

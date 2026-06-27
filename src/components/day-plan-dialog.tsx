@@ -6,6 +6,7 @@ import { de } from "date-fns/locale";
 import { DAY_GRUND_CONFIG, DAY_GRUND_ORDER } from "@/lib/types";
 import { useDayStore } from "@/lib/day-store";
 import { resolveGrundConfig } from "@/lib/day-grund";
+import { useDayPlansReady } from "@/lib/use-persist-ready";
 import { cn, formatDayPlanHoursLabel, formatDayPlanLabel } from "@/lib/utils";
 
 const HOUR_OPTIONS = [0, 1, 2, 3, 4, 5, 6, 8] as const;
@@ -30,6 +31,7 @@ export function DayPlanDialog({ date, onClose }: DayPlanDialogProps) {
     addCustomGrund,
     removeCustomGrund,
   } = useDayStore();
+  const plansReady = useDayPlansReady();
 
   const saved = dayPlans[dateStr];
   const [grund, setGrund] = useState<string | null>(saved?.grund ?? null);
@@ -49,6 +51,18 @@ export function DayPlanDialog({ date, onClose }: DayPlanDialogProps) {
   useEffect(() => {
     if (showAddForm) nameInputRef.current?.focus();
   }, [showAddForm]);
+
+  useEffect(() => {
+    if (!plansReady) return;
+    const plan = dayPlans[dateStr];
+    if (plan) {
+      setGrund(plan.grund);
+      setHours(plan.hours);
+    } else {
+      setGrund(null);
+      setHours(0);
+    }
+  }, [plansReady, dateStr, dayPlans]);
 
   const persist = (nextGrund: string, nextHours: number, updateDefault: boolean) => {
     setDayPlan(dateStr, { grund: nextGrund, hours: nextHours });
@@ -135,6 +149,10 @@ export function DayPlanDialog({ date, onClose }: DayPlanDialogProps) {
         </div>
 
         <div className="px-5 pb-5 space-y-4 overflow-y-auto">
+          {!plansReady ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">Tagespläne werden geladen…</p>
+          ) : (
+          <>
           <div className="grid grid-cols-3 gap-2">
             {BUILTIN_GRID_ORDER.map((g) => {
               const cfg = DAY_GRUND_CONFIG[g];
@@ -324,6 +342,8 @@ export function DayPlanDialog({ date, onClose }: DayPlanDialogProps) {
             >
               Plan entfernen
             </button>
+          )}
+          </>
           )}
         </div>
       </div>

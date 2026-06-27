@@ -5,11 +5,16 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
+import { useDayStore } from "@/lib/day-store";
+import { useExamenStore } from "@/lib/examen-store";
+import { useLernblockStore } from "@/lib/lernblock-store";
+import { useThemenStore } from "@/lib/themen-store";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
@@ -67,6 +72,16 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    void Promise.all([
+      useDayStore.persist.rehydrate(),
+      useExamenStore.persist.rehydrate(),
+      useLernblockStore.persist.rehydrate(),
+      useThemenStore.persist.rehydrate(),
+    ]);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />

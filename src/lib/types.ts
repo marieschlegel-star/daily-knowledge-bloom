@@ -151,6 +151,7 @@ export interface GCalCalendar {
 
 // ─── Tagesplanung ──────────────────────────────────────────────────
 export type DayGrund =
+  | "lerntag"
   | "arbeit"
   | "ag"
   | "examensklausur"
@@ -184,6 +185,7 @@ export interface DayGrundDisplay {
 }
 
 export const DAY_GRUND_ORDER: DayGrund[] = [
+  "lerntag",
   "arbeit",
   "ag",
   "examensklausur",
@@ -202,6 +204,7 @@ export const DAY_GRUND_CONFIG: Record<DayGrund, {
   bg: string;
   color: string;
 }> = {
+  lerntag:         { label: "Lerntag",         emoji: "📖", defaultHours: 8, bg: "rgba(220,252,231,0.35)", color: "#15803D" },
   arbeit:          { label: "Arbeit",          emoji: "🏛", defaultHours: 3, bg: "rgba(219,234,254,0.28)", color: "#2563EB" },
   ag:              { label: "AG",              emoji: "📚", defaultHours: 2, bg: "rgba(209,250,229,0.32)", color: "#047857" },
   examensklausur:  { label: "Examensklausur",  emoji: "⚖", defaultHours: 1, bg: "rgba(254,240,138,0.38)", color: "#A16207" },
