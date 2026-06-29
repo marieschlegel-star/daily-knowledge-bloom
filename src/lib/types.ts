@@ -166,6 +166,7 @@ export type DayGrund =
 export interface DayPlan {
   grund: string;
   hours: number;
+  workStart?: string; // "HH:MM", default "08:00"
 }
 
 export interface CustomDayGrund {

@@ -28,6 +28,7 @@ interface CalendarViewProps {
   view: string;
   onSessionDrop: (sessionId: string, newDate: string) => void;
   onTodoDrop?: (todoId: string, newDate: string) => void;
+  onWorkBlockChange?: (dateStr: string, workStart: string, hours: number) => void;
   onSessionResize: (sessionId: string, duration: number) => void;
   onEventClick: (sessionId: string) => void;
   onKlausurClick?: (klausurId: string) => void;
@@ -46,6 +47,7 @@ export function CalendarViewComponent({
   view,
   onSessionDrop,
   onTodoDrop,
+  onWorkBlockChange,
   onSessionResize,
   onEventClick,
   onKlausurClick,
@@ -75,6 +77,28 @@ export function CalendarViewComponent({
         backgroundColor: cfg.bg,
         extendedProps: { type: "daytype", grund: plan.grund },
       });
+
+      // Timed work block for "arbeit" plans
+      if (plan.grund === "arbeit" && plan.hours > 0) {
+        const workStart = plan.workStart ?? "08:00";
+        const [h, m] = workStart.split(":").map(Number);
+        const start = new Date(`${dateStr}T${workStart}:00`);
+        const end = new Date(start.getTime() + plan.hours * 3600000);
+        const endStr = `${String(end.getHours()).padStart(2, "0")}:${String(end.getMinutes()).padStart(2, "0")}`;
+        events.push({
+          id: `workblock-${dateStr}`,
+          title: `🏛 Arbeit ${workStart}–${endStr}`,
+          start: `${dateStr}T${workStart}:00`,
+          end: end.toISOString(),
+          backgroundColor: "rgba(203,213,225,0.45)",
+          borderColor: "rgba(148,163,184,0.6)",
+          textColor: "#64748B",
+          editable: true,
+          startEditable: true,
+          durationEditable: true,
+          extendedProps: { type: "workblock", dateStr },
+        });
+      }
     });
 
     if (visibility.lernplan) {
@@ -211,9 +235,15 @@ export function CalendarViewComponent({
           );
         }}
         eventDrop={(info) => {
-          const { type, sessionId, todoId } = info.event.extendedProps ?? {};
+          const { type, sessionId, todoId, dateStr } = info.event.extendedProps ?? {};
           if (!info.event.start) { info.revert(); return; }
-          if (type === "todo" && todoId) {
+          if (type === "workblock" && dateStr) {
+            const newStart = `${String(info.event.start.getHours()).padStart(2,"0")}:${String(info.event.start.getMinutes()).padStart(2,"0")}`;
+            const hours = info.event.end
+              ? (info.event.end.getTime() - info.event.start.getTime()) / 3600000
+              : 8;
+            onWorkBlockChange?.(dateStr, newStart, hours);
+          } else if (type === "todo" && todoId) {
             const newDate = info.event.allDay
               ? info.event.startStr.slice(0, 10)
               : toLocalISO(info.event.start);
@@ -225,12 +255,17 @@ export function CalendarViewComponent({
           }
         }}
         eventResize={(info: EventResizeDoneArg) => {
-          const sid = info.event.extendedProps.sessionId as string | undefined;
-          if (!sid || !info.event.start || !info.event.end) {
+          const { type, sessionId, dateStr } = info.event.extendedProps ?? {};
+          if (!info.event.start || !info.event.end) { info.revert(); return; }
+          if (type === "workblock" && dateStr) {
+            const newStart = `${String(info.event.start.getHours()).padStart(2,"0")}:${String(info.event.start.getMinutes()).padStart(2,"0")}`;
+            const hours = (info.event.end.getTime() - info.event.start.getTime()) / 3600000;
+            onWorkBlockChange?.(dateStr, newStart, Math.round(hours * 4) / 4);
+          } else if (sessionId) {
+            onSessionResize(sessionId, durationHoursFromRange(info.event.start, info.event.end, 5));
+          } else {
             info.revert();
-            return;
           }
-          onSessionResize(sid, durationHoursFromRange(info.event.start, info.event.end, 5));
         }}
         eventReceive={(info: EventReceiveArg) => {
           const { type, sessionId, subject, thema } = info.event.extendedProps ?? {};

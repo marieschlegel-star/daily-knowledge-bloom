@@ -17,6 +17,7 @@ import { QuickCreateModal, type QuickCreatePayload, type QuickCreatePrefill } fr
 import { DayPlanDialog } from "@/components/day-plan-dialog";
 import { DayDetailPanel } from "@/components/day-detail-panel";
 import { useAppStore } from "@/lib/store";
+import { useDayStore } from "@/lib/day-store";
 import { toLocalISO, toDateOnly } from "@/lib/utils";
 import {
   DUMMY_SESSIONS,
@@ -210,6 +211,15 @@ function HomePage() {
     [updateTodoDate]
   );
 
+  const handleWorkBlockChange = useCallback(
+    (dateStr: string, workStart: string, hours: number) => {
+      const current = useDayStore.getState().dayPlans[dateStr];
+      if (!current) return;
+      useDayStore.getState().setDayPlan(dateStr, { ...current, workStart, hours });
+    },
+    []
+  );
+
   const handleClearSessionDate = useCallback(
     (sessionId: string) => {
       updateSessionDate.mutate(
@@ -368,6 +378,7 @@ function HomePage() {
             view={calendarView}
             onSessionDrop={handleSessionDrop}
             onTodoDrop={handleTodoDrop}
+            onWorkBlockChange={handleWorkBlockChange}
             onSessionResize={handleSessionResize}
             onEventClick={(id) => {
               setDetailDate(null);
