@@ -3,9 +3,16 @@ import { useEffect, useRef, useState } from "react";
 import { Draggable } from "@fullcalendar/interaction";
 import { useAppStore } from "@/lib/store";
 import { useGCalConnection } from "@/lib/use-gcal";
+import { useGCalStore } from "@/lib/gcal-store";
 import { getFachColors, cn } from "@/lib/utils";
 import type { Fach, TodoKategorie, LernSession, Todo } from "@/lib/types";
 import { GripVertical, ChevronDown, ChevronRight } from "lucide-react";
+
+const GCAL_COLOR_PRESETS = [
+  "#4285F4", "#EA4335", "#FBBC05", "#34A853",
+  "#FF6D00", "#AA00FF", "#00BCD4", "#E91E63",
+  "#795548", "#607D8B", "#2E7D32", "#1565C0",
+];
 
 const ALL_FAECHER: Fach[] = ["ZPO", "ZivR", "ZPO III", "StrafR", "StPO", "VwR", "VwGO"];
 const ALL_KATEGORIEN: TodoKategorie[] = ["Lernen", "KK", "AssK", "AG"];
@@ -41,6 +48,8 @@ export function LeftSidebar({ sessions, todos }: LeftSidebarProps) {
   } = useAppStore();
 
   const { connected, connecting, calendars, connect, disconnect } = useGCalConnection();
+  const { customColors, setCalendarColor } = useGCalStore();
+  const [colorPickerOpen, setColorPickerOpen] = useState<string | null>(null);
 
   const chipsRef = useRef<HTMLDivElement>(null);
 
@@ -131,15 +140,47 @@ export function LeftSidebar({ sessions, todos }: LeftSidebarProps) {
                 </div>
                 {connected ? (
                   calendars.length > 0 ? (
-                    calendars.map((cal) => (
-                      <CalToggle
-                        key={cal.id}
-                        label={cal.name}
-                        color={cal.color}
-                        active={visibility.gcal[cal.id] !== false}
-                        onClick={() => toggleGCal(cal.id)}
-                      />
-                    ))
+                    calendars.map((cal) => {
+                      const color = customColors[cal.id] ?? cal.color;
+                      return (
+                        <div key={cal.id} className="relative">
+                          <div className="flex items-center gap-1">
+                            <div className="flex-1">
+                              <CalToggle
+                                label={cal.name}
+                                color={color}
+                                active={visibility.gcal[cal.id] !== false}
+                                onClick={() => toggleGCal(cal.id)}
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              title="Farbe ändern"
+                              onClick={() => setColorPickerOpen(colorPickerOpen === cal.id ? null : cal.id)}
+                              className="shrink-0 w-3.5 h-3.5 rounded-full border border-white/50 shadow-sm hover:scale-110 transition-transform"
+                              style={{ background: color }}
+                            />
+                          </div>
+                          {colorPickerOpen === cal.id && (
+                            <div className="mt-1 p-1.5 bg-card border border-border rounded-lg shadow-md grid grid-cols-6 gap-1">
+                              {GCAL_COLOR_PRESETS.map((preset) => (
+                                <button
+                                  key={preset}
+                                  type="button"
+                                  title={preset}
+                                  onClick={() => { setCalendarColor(cal.id, preset); setColorPickerOpen(null); }}
+                                  className="w-5 h-5 rounded-full hover:scale-110 transition-transform border-2"
+                                  style={{
+                                    background: preset,
+                                    borderColor: color === preset ? "var(--foreground)" : "transparent",
+                                  }}
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
                   ) : (
                     <p className="text-label text-muted-foreground px-1 py-0.5">Kalender werden geladen…</p>
                   )

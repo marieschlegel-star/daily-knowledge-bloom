@@ -10,6 +10,7 @@ import type { EventReceiveArg, EventResizeDoneArg } from "@fullcalendar/interact
 import { durationHoursFromRange, toLocalISO } from "@/lib/utils";
 import deLocale from "@fullcalendar/core/locales/de";
 import { useAppStore } from "@/lib/store";
+import { useGCalStore } from "@/lib/gcal-store";
 import { useDayStore } from "@/lib/day-store";
 import { getFachColors } from "@/lib/utils";
 import type { LernSession, Klausur, Todo, GCalEvent } from "@/lib/types";
@@ -52,6 +53,7 @@ export function CalendarViewComponent({
   onThemeDrop,
 }: CalendarViewProps) {
   const { visibility, filters } = useAppStore();
+  const { customColors } = useGCalStore();
   const { dayPlans, customGrunds } = useDayStore();
 
   const buildEvents = useCallback((): EventInput[] => {
@@ -133,8 +135,9 @@ export function CalendarViewComponent({
 
     gcalEvents.forEach((e) => {
       if (visibility.gcal[e.calendarId] === false) return;
-      const bg = e.color ? `${e.color}33` : "#F1EFE8";
-      const border = e.color ?? "#E5E0D5";
+      const color = customColors[e.calendarId] ?? e.color;
+      const bg = color ? `${color}33` : "#F1EFE8";
+      const border = color ?? "#E5E0D5";
       events.push({
         id: `gcal-${e.id}`,
         title: e.title,
@@ -150,7 +153,7 @@ export function CalendarViewComponent({
     });
 
     return events;
-  }, [sessions, klausuren, todos, gcalEvents, visibility, dayPlans, customGrunds, filters]);
+  }, [sessions, klausuren, todos, gcalEvents, visibility, customColors, dayPlans, customGrunds, filters]);
 
   return (
     <div className="h-full overflow-hidden px-2 pt-1">
