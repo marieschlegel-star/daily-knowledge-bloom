@@ -69,7 +69,13 @@ export function LeftSidebar({ sessions, todos }: LeftSidebarProps) {
   const activeFaecher = filters.faecher;
   const activeKategorien = filters.todoKategorien;
 
-  const openSessions = sessions.filter((s) => !s.completed);
+  const sortByTitle = (a: LernSession, b: LernSession) => {
+    const num = (s: string) => parseFloat(s.match(/^[\d.]+/)?.[0] ?? "9999");
+    const diff = num(a.title) - num(b.title);
+    return diff !== 0 ? diff : a.title.localeCompare(b.title, "de");
+  };
+
+  const openSessions = sessions.filter((s) => !s.completed).sort(sortByTitle);
   const filteredSessions = activeFaecher.length === 0
     ? []
     : openSessions.filter((s) => activeFaecher.includes(s.subject));

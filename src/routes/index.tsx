@@ -164,6 +164,30 @@ function HomePage() {
     onSettled: () => qc.invalidateQueries({ queryKey: ["todos"] }),
   });
 
+  const updateTodoDate = useMutation({
+    mutationFn: async ({ id, date }: { id: string; date: string | null }) => {
+      if (!isNotionPageId(id)) return;
+      await notionWrite("/api/notion/todos", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, date }),
+      });
+    },
+    onMutate: async ({ id, date }) => {
+      await qc.cancelQueries({ queryKey: ["todos"] });
+      const prev = qc.getQueryData<Todo[]>(["todos"]);
+      qc.setQueryData<Todo[]>(["todos"], (old) =>
+        old?.map((t) => (t.id === id ? { ...t, date } : t)) ?? []
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["todos"], ctx.prev);
+      toast.error("To-Do konnte nicht verschoben werden");
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["todos"] }),
+  });
+
   // ─── Handlers ─────────────────────────────────────────────────────
   const handleSessionResize = useCallback(
     (sessionId: string, duration: number) => {
@@ -177,6 +201,13 @@ function HomePage() {
       updateSessionDate.mutate({ id: sessionId, date: newDate });
     },
     [updateSessionDate]
+  );
+
+  const handleTodoDrop = useCallback(
+    (todoId: string, newDate: string) => {
+      updateTodoDate.mutate({ id: todoId, date: newDate });
+    },
+    [updateTodoDate]
   );
 
   const handleClearSessionDate = useCallback(
@@ -336,6 +367,7 @@ function HomePage() {
             gcalEvents={gcalEvents}
             view={calendarView}
             onSessionDrop={handleSessionDrop}
+            onTodoDrop={handleTodoDrop}
             onSessionResize={handleSessionResize}
             onEventClick={(id) => {
               setDetailDate(null);

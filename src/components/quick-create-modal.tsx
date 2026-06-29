@@ -189,6 +189,10 @@ export function QuickCreateModal({ date, allDay, calendarView, prefill, sessions
                   <div className="max-h-[180px] overflow-y-auto">
                     {sessions
                       .filter(s => !s.completed && s.title.toLowerCase().includes(sessionSearch.toLowerCase()))
+                      .sort((a, b) => {
+                        const num = (s: string) => parseFloat(s.match(/^[\d.]+/)?.[0] ?? "9999");
+                        return num(a.title) - num(b.title) || a.title.localeCompare(b.title, "de");
+                      })
                       .map(s => {
                         const colors = getFachColors(s.subject);
                         return (

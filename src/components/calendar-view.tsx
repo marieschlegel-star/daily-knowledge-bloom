@@ -27,6 +27,7 @@ interface CalendarViewProps {
   gcalEvents: GCalEvent[];
   view: string;
   onSessionDrop: (sessionId: string, newDate: string) => void;
+  onTodoDrop?: (todoId: string, newDate: string) => void;
   onSessionResize: (sessionId: string, duration: number) => void;
   onEventClick: (sessionId: string) => void;
   onKlausurClick?: (klausurId: string) => void;
@@ -44,6 +45,7 @@ export function CalendarViewComponent({
   gcalEvents,
   view,
   onSessionDrop,
+  onTodoDrop,
   onSessionResize,
   onEventClick,
   onKlausurClick,
@@ -123,12 +125,13 @@ export function CalendarViewComponent({
             id: `todo-${t.id}`,
             title: `· ${t.name}`,
             start: t.date!,
-            allDay: true,
+            allDay: !t.date?.includes("T"),
             backgroundColor: "#FEF3C7",
             borderColor: "#FDE68A",
             textColor: "#92400E",
-            editable: false,
-            extendedProps: { type: "todo" },
+            editable: true,
+            startEditable: true,
+            extendedProps: { type: "todo", todoId: t.id },
           });
         });
     }
@@ -206,6 +209,20 @@ export function CalendarViewComponent({
               )}
             </div>
           );
+        }}
+        eventDrop={(info) => {
+          const { type, sessionId, todoId } = info.event.extendedProps ?? {};
+          if (!info.event.start) { info.revert(); return; }
+          if (type === "todo" && todoId) {
+            const newDate = info.event.allDay
+              ? info.event.startStr.slice(0, 10)
+              : toLocalISO(info.event.start);
+            onTodoDrop?.(todoId, newDate);
+          } else if (sessionId) {
+            onSessionDrop(sessionId, toLocalISO(info.event.start));
+          } else {
+            info.revert();
+          }
         }}
         eventResize={(info: EventResizeDoneArg) => {
           const sid = info.event.extendedProps.sessionId as string | undefined;
