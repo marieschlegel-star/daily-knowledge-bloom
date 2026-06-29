@@ -69,10 +69,25 @@ export const Route = createFileRoute("/api/notion/todos")({
       },
       PATCH: async ({ request }) => {
         try {
-          const { id, completed } = await request.json();
+          const body = await request.json();
+          const { id, completed, date } = body;
           if (!id) return Response.json({ error: "ID required" }, { status: 400 });
-          const checkboxKey = await resolveCheckboxKey(id);
-          await notionUpdatePage(id, { [checkboxKey]: { checkbox: completed } });
+
+          const updates: Record<string, unknown> = {};
+
+          if (completed !== undefined) {
+            const checkboxKey = await resolveCheckboxKey(id);
+            updates[checkboxKey] = { checkbox: completed };
+          }
+
+          if (date !== undefined) {
+            updates["Dat"] = date ? { date: { start: date } } : { date: null };
+          }
+
+          if (Object.keys(updates).length > 0) {
+            await notionUpdatePage(id, updates);
+          }
+
           return Response.json({ success: true });
         } catch (e: any) {
           console.error("[todos PATCH]", e.message);

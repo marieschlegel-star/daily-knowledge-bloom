@@ -1,5 +1,5 @@
 
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -36,6 +36,7 @@ interface CalendarViewProps {
   onDateClick?: (date: Date, allDay: boolean) => void;
   onDayHeaderClick?: (date: Date) => void;
   onThemeDrop?: (subject: string, thema: string, date: Date) => void;
+  onTodoClearDate?: (todoId: string) => void;
 }
 
 export function CalendarViewComponent({
@@ -55,10 +56,12 @@ export function CalendarViewComponent({
   onDateClick,
   onDayHeaderClick,
   onThemeDrop,
+  onTodoClearDate,
 }: CalendarViewProps) {
   const { visibility, filters } = useAppStore();
   const { customColors } = useGCalStore();
   const { dayPlans, customGrunds } = useDayStore();
+  const lastDateClick = useRef<{ key: string; time: number } | null>(null);
 
   const buildEvents = useCallback((): EventInput[] => {
     const events: EventInput[] = [];
@@ -161,7 +164,7 @@ export function CalendarViewComponent({
     }
 
     gcalEvents.forEach((e) => {
-      if (visibility.gcal[e.calendarId] === false) return;
+      if (visibility.gcal[e.calendarId] !== true) return;
       const color = customColors[e.calendarId] ?? e.color;
       const bg = color ? `${color}33` : "#F1EFE8";
       const border = color ?? "#E5E0D5";
@@ -279,11 +282,21 @@ export function CalendarViewComponent({
         eventClick={(info) => {
           info.jsEvent.preventDefault();
           info.jsEvent.stopPropagation();
-          const { sessionId, klausurId, type } = info.event.extendedProps ?? {};
+          const { sessionId, klausurId, type, todoId } = info.event.extendedProps ?? {};
           if (sessionId) onEventClick(sessionId);
           else if (type === "klausur" && klausurId) onKlausurClick?.(klausurId);
+          else if (type === "todo" && todoId) onTodoClearDate?.(todoId);
         }}
-        dateClick={(info) => onDateClick?.(info.date, info.allDay)}
+        dateClick={(info) => {
+          const key = info.dateStr;
+          const now = Date.now();
+          if (lastDateClick.current?.key === key && now - lastDateClick.current.time < 400) {
+            onDateClick?.(info.date, info.allDay);
+            lastDateClick.current = null;
+          } else {
+            lastDateClick.current = { key, time: now };
+          }
+        }}
         eventContent={(arg) => <EventContent arg={arg} />}
       />
     </div>

@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { clientJSONStorage } from "./client-storage";
 import type {
   CalendarView,
   CalendarVisibility,
@@ -41,7 +43,9 @@ interface AppState {
   incrementAiCallCount: () => void;
 }
 
-export const useAppStore = create<AppState>((set) => ({
+export const useAppStore = create<AppState>()(
+  persist(
+    (set) => ({
   calendarView: "timeGridWeek",
   setCalendarView: (view) => set({ calendarView: view }),
 
@@ -71,7 +75,8 @@ export const useAppStore = create<AppState>((set) => ({
     set((s) => ({
       visibility: {
         ...s.visibility,
-        gcal: Object.fromEntries(ids.map((id) => [id, s.visibility.gcal[id] ?? true])),
+        // default: hidden (false) — user must explicitly enable each calendar
+        gcal: Object.fromEntries(ids.map((id) => [id, s.visibility.gcal[id] ?? false])),
       },
     })),
 
@@ -106,4 +111,16 @@ export const useAppStore = create<AppState>((set) => ({
 
   aiCallCount: 0,
   incrementAiCallCount: () => set((s) => ({ aiCallCount: s.aiCallCount + 1 })),
-}));
+    }),
+    {
+      name: "juris-app",
+      storage: clientJSONStorage,
+      skipHydration: true,
+      partialize: (s) => ({
+        calendarView: s.calendarView,
+        visibility: s.visibility,
+        filters: s.filters,
+      }),
+    }
+  )
+);

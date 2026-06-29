@@ -211,6 +211,13 @@ function HomePage() {
     [updateTodoDate]
   );
 
+  const handleTodoClearDate = useCallback(
+    (todoId: string) => {
+      updateTodoDate.mutate({ id: todoId, date: null });
+    },
+    [updateTodoDate]
+  );
+
   const handleWorkBlockChange = useCallback(
     (dateStr: string, workStart: string, hours: number) => {
       const current = useDayStore.getState().dayPlans[dateStr];
@@ -378,6 +385,7 @@ function HomePage() {
             view={calendarView}
             onSessionDrop={handleSessionDrop}
             onTodoDrop={handleTodoDrop}
+            onTodoClearDate={handleTodoClearDate}
             onWorkBlockChange={handleWorkBlockChange}
             onSessionResize={handleSessionResize}
             onEventClick={(id) => {

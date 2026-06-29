@@ -176,7 +176,7 @@ export function QuickCreateModal({ date, allDay, calendarView, prefill, sessions
                 <ChevronDown className={`h-3 w-3 transition-transform ${showSessionList ? "rotate-180" : ""}`} />
               </button>
               {showSessionList && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-border rounded-xl shadow-lg overflow-hidden">
+                <div className="absolute z-50 w-full mt-1 bg-white border border-border rounded-xl shadow-lg overflow-hidden">
                   <div className="p-1.5 border-b border-border">
                     <input
                       autoFocus
@@ -199,7 +199,8 @@ export function QuickCreateModal({ date, allDay, calendarView, prefill, sessions
                           <button
                             key={s.id}
                             type="button"
-                            onClick={() => {
+                            onMouseDown={(e) => {
+                              e.preventDefault();
                               setTitle(s.title);
                               setFach(s.subject);
                               setShowSessionList(false);
