@@ -4,6 +4,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
+import multiMonthPlugin from "@fullcalendar/multimonth";
 import interactionPlugin from "@fullcalendar/interaction";
 import type { EventInput } from "@fullcalendar/core";
 import type { EventReceiveArg, EventResizeDoneArg } from "@fullcalendar/interaction";
@@ -120,7 +121,7 @@ export function CalendarViewComponent({
             borderColor: colors.border,
             textColor: colors.text,
             extendedProps: { type: "session", sessionId: s.id, fach: s.subject },
-            startEditable: false,
+            startEditable: true,
             durationEditable: true,
           });
         });
@@ -185,11 +186,13 @@ export function CalendarViewComponent({
     return events;
   }, [sessions, klausuren, todos, gcalEvents, visibility, customColors, dayPlans, customGrunds, filters]);
 
+  const isScrollableView = view === "dayGridMonth" || view === "multiMonthYear";
+
   return (
-    <div className="h-full overflow-hidden px-2 pt-1">
+    <div className={`h-full px-2 pt-1 ${isScrollableView ? "overflow-y-auto" : "overflow-hidden"}`}>
       <FullCalendar
         ref={calRef}
-        plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
+        plugins={[dayGridPlugin, timeGridPlugin, listPlugin, multiMonthPlugin, interactionPlugin]}
         initialView={view}
         locale={deLocale}
         headerToolbar={false}
@@ -199,7 +202,13 @@ export function CalendarViewComponent({
         droppable={true}
         eventResizableFromStart={false}
         eventDurationEditable={true}
-        height="100%"
+        height={isScrollableView ? "auto" : "100%"}
+        views={{
+          multiMonthYear: {
+            multiMonthMaxColumns: 3,
+            multiMonthMinWidth: 250,
+          },
+        }}
         slotMinTime="07:00:00"
         slotMaxTime="23:00:00"
         slotDuration="00:15:00"
@@ -232,6 +241,22 @@ export function CalendarViewComponent({
               ) : (
                 <span className="text-meta text-transparent group-hover:text-muted-foreground transition-colors">
                   + Planen
+                </span>
+              )}
+            </div>
+          );
+        }}
+        dayCellContent={(arg) => {
+          if (view !== "dayGridMonth" && view !== "multiMonthYear") return undefined;
+          const dateStr = format(arg.date, "yyyy-MM-dd");
+          const plan = dayPlans[dateStr];
+          const cfg = plan ? resolveGrundConfig(plan.grund, customGrunds) : null;
+          return (
+            <div className="flex flex-col w-full min-h-0">
+              <span className="text-xs font-semibold text-right pr-1">{arg.dayNumberText}</span>
+              {cfg && (
+                <span className="text-[9px] font-medium leading-tight px-1 pb-0.5" style={{ color: cfg.color }}>
+                  {cfg.emoji} {plan!.hours > 0 ? `${plan!.hours}h` : cfg.label.slice(0, 6)}
                 </span>
               )}
             </div>

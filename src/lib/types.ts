@@ -222,7 +222,7 @@ export const DAY_GRUND_CONFIG: Record<DayGrund, {
 export const DEFAULT_DAY_HOURS = 8;
 
 // ─── UI State ──────────────────────────────────────────────────────
-export type CalendarView = "timeGridDay" | "timeGridWeek" | "dayGridMonth" | "listWeek";
+export type CalendarView = "timeGridDay" | "timeGridWeek" | "dayGridMonth" | "multiMonthYear" | "listWeek";
 
 export interface CalendarVisibility {
   lernplan: boolean;

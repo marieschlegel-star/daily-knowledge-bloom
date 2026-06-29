@@ -12,6 +12,7 @@ const VIEW_LABELS: Record<CalendarView, string> = {
   timeGridDay: "Tag",
   timeGridWeek: "Woche",
   dayGridMonth: "Monat",
+  multiMonthYear: "Jahr",
   listWeek: "Agenda",
 };
 

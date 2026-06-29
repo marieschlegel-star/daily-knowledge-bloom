@@ -112,7 +112,9 @@ function HomePage() {
         description: error instanceof Error ? error.message : undefined,
       });
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: ["sessions"] }),
+    onSettled: (_d, _e, { id }) => {
+      if (isNotionPageId(id)) qc.invalidateQueries({ queryKey: ["sessions"] });
+    },
   });
 
   const updateSessionDuration = useMutation({
@@ -138,7 +140,9 @@ function HomePage() {
         description: error instanceof Error ? error.message : undefined,
       });
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: ["sessions"] }),
+    onSettled: (_d, _e, { id }) => {
+      if (isNotionPageId(id)) qc.invalidateQueries({ queryKey: ["sessions"] });
+    },
   });
 
   const completeTodo = useMutation({
@@ -186,7 +190,9 @@ function HomePage() {
       if (ctx?.prev) qc.setQueryData(["todos"], ctx.prev);
       toast.error("To-Do konnte nicht verschoben werden");
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: ["todos"] }),
+    onSettled: (_d, _e, { id }) => {
+      if (isNotionPageId(id)) qc.invalidateQueries({ queryKey: ["todos"] });
+    },
   });
 
   // ─── Handlers ─────────────────────────────────────────────────────
