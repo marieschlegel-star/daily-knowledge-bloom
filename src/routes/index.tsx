@@ -405,6 +405,7 @@ function HomePage() {
           allDay={quickCreate.allDay}
           calendarView={calendarView}
           prefill={quickCreate.prefill}
+          sessions={sessions}
           onClose={() => setQuickCreate(null)}
           onCreate={handleQuickCreate}
         />

@@ -1,10 +1,10 @@
 
 import { useState, useEffect, useRef } from "react";
-import { X } from "lucide-react";
+import { X, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { getFachColors } from "@/lib/utils";
-import type { Fach, TodoKategorie } from "@/lib/types";
+import type { Fach, TodoKategorie, LernSession } from "@/lib/types";
 
 const ALL_FAECHER: Fach[] = ["ZPO", "ZivR", "ZPO III", "StrafR", "StPO", "VwR", "VwGO"];
 const ALL_KATEGORIEN: TodoKategorie[] = ["Lernen", "KK", "AssK", "AG"];
@@ -38,6 +38,7 @@ interface QuickCreateModalProps {
   allDay: boolean;
   calendarView?: string;
   prefill?: QuickCreatePrefill;
+  sessions?: LernSession[];
   onClose: () => void;
   onCreate: (payload: QuickCreatePayload) => Promise<{ ok: boolean; error?: string }>;
 }
@@ -60,10 +61,12 @@ function applyTime(base: Date, time: string): Date {
   return next;
 }
 
-export function QuickCreateModal({ date, allDay, calendarView, prefill, onClose, onCreate }: QuickCreateModalProps) {
+export function QuickCreateModal({ date, allDay, calendarView, prefill, sessions, onClose, onCreate }: QuickCreateModalProps) {
   const [type, setType] = useState<CreateType>(() => prefill?.type ?? suggestedType(allDay, calendarView));
   const [title, setTitle] = useState(prefill?.title ?? "");
   const [fach, setFach] = useState<Fach>(prefill?.subject ?? "ZPO");
+  const [sessionSearch, setSessionSearch] = useState("");
+  const [showSessionList, setShowSessionList] = useState(false);
   const [duration, setDuration] = useState(1);
   const [kategorie, setKategorie] = useState<TodoKategorie>("Lernen");
   const [time, setTime] = useState(format(date, "HH:mm"));
@@ -160,6 +163,59 @@ export function QuickCreateModal({ date, allDay, calendarView, prefill, onClose,
             <p className="text-[11px] text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
               {error}
             </p>
+          )}
+
+          {type === "lerneinheit" && sessions && sessions.filter(s => !s.completed).length > 0 && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowSessionList((v) => !v)}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-xl border border-border bg-slate-50 hover:bg-white text-xs text-muted-foreground transition-all"
+              >
+                <span>Aus Notion wählen…</span>
+                <ChevronDown className={`h-3 w-3 transition-transform ${showSessionList ? "rotate-180" : ""}`} />
+              </button>
+              {showSessionList && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-border rounded-xl shadow-lg overflow-hidden">
+                  <div className="p-1.5 border-b border-border">
+                    <input
+                      autoFocus
+                      value={sessionSearch}
+                      onChange={(e) => setSessionSearch(e.target.value)}
+                      placeholder="Suchen…"
+                      className="w-full text-xs px-2 py-1 rounded-lg bg-slate-50 border border-border focus:outline-none"
+                    />
+                  </div>
+                  <div className="max-h-[180px] overflow-y-auto">
+                    {sessions
+                      .filter(s => !s.completed && s.title.toLowerCase().includes(sessionSearch.toLowerCase()))
+                      .map(s => {
+                        const colors = getFachColors(s.subject);
+                        return (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => {
+                              setTitle(s.title);
+                              setFach(s.subject);
+                              setShowSessionList(false);
+                              setSessionSearch("");
+                            }}
+                            className="w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-50 transition-colors text-left"
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: colors.text }} />
+                            <span className="text-xs text-foreground truncate flex-1">{s.title}</span>
+                            <span className="text-[10px] shrink-0" style={{ color: colors.text }}>{s.subject}</span>
+                          </button>
+                        );
+                      })}
+                    {sessions.filter(s => !s.completed && s.title.toLowerCase().includes(sessionSearch.toLowerCase())).length === 0 && (
+                      <p className="text-xs text-muted-foreground px-3 py-2">Keine Treffer</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           <input
