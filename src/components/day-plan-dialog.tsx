@@ -36,6 +36,7 @@ export function DayPlanDialog({ date, onClose }: DayPlanDialogProps) {
   const saved = dayPlans[dateStr];
   const [grund, setGrund] = useState<string | null>(saved?.grund ?? null);
   const [hours, setHours] = useState(saved?.hours ?? 0);
+  const [workHours, setWorkHours] = useState(saved?.workHours ?? 8);
   const [saveAsDefault, setSaveAsDefault] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newLabel, setNewLabel] = useState("");
@@ -58,14 +59,18 @@ export function DayPlanDialog({ date, onClose }: DayPlanDialogProps) {
     if (plan) {
       setGrund(plan.grund);
       setHours(plan.hours);
+      setWorkHours(plan.workHours ?? 8);
     } else {
       setGrund(null);
       setHours(0);
+      setWorkHours(8);
     }
   }, [plansReady, dateStr, dayPlans]);
 
-  const persist = (nextGrund: string, nextHours: number, updateDefault: boolean) => {
-    setDayPlan(dateStr, { grund: nextGrund, hours: nextHours });
+  const persist = (nextGrund: string, nextHours: number, updateDefault: boolean, nextWorkHours?: number) => {
+    const plan = { grund: nextGrund, hours: nextHours } as { grund: string; hours: number; workHours?: number };
+    if (nextGrund === "arbeit") plan.workHours = nextWorkHours ?? workHours;
+    setDayPlan(dateStr, plan);
     if (updateDefault) setGrundDefault(nextGrund, nextHours);
     onClose();
   };
@@ -75,13 +80,15 @@ export function DayPlanDialog({ date, onClose }: DayPlanDialogProps) {
     persist(g, getGrundDefault(g), false);
   };
 
-  const hoursDirty = saved != null && grund != null && hours !== saved.hours;
+  const hoursDirty = saved != null && grund != null && (
+    hours !== saved.hours || (grund === "arbeit" && workHours !== (saved.workHours ?? 8))
+  );
   const showHoursSection = saved != null && grund != null;
   const grundCfg = grund ? resolveGrundConfig(grund, customGrunds) : null;
 
   const saveHours = () => {
     if (!grund) return;
-    persist(grund, hours, saveAsDefault);
+    persist(grund, hours, saveAsDefault, workHours);
   };
 
   const handleAddCustom = () => {
@@ -263,31 +270,59 @@ export function DayPlanDialog({ date, onClose }: DayPlanDialogProps) {
             <>
               <div className="text-center py-1">
                 <p className="text-2xl font-bold text-foreground tracking-tight">
-                  {formatDayPlanHoursLabel(hours)}
+                  {formatDayPlanHoursLabel(hours, grund ?? undefined)}
                 </p>
                 {grund && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    {formatDayPlanLabel(grund, hours, customGrunds)}
+                    {formatDayPlanLabel(grund, hours, customGrunds, grund === "arbeit" ? workHours : undefined)}
                   </p>
                 )}
               </div>
 
-              <div className="flex flex-wrap justify-center gap-1.5">
-                {HOUR_OPTIONS.map((h) => (
-                  <button
-                    key={h}
-                    type="button"
-                    onClick={() => setHours(h)}
-                    className={cn(
-                      "min-w-[2.5rem] px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors",
-                      hours === h
-                        ? "bg-primary text-white"
-                        : "bg-muted text-foreground hover:bg-muted/80"
-                    )}
-                  >
-                    {h}h
-                  </button>
-                ))}
+              {grund === "arbeit" && (
+                <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground">Arbeitszeit (Blockierung im Kalender)</p>
+                  <div className="flex flex-wrap justify-center gap-1.5">
+                    {[4, 5, 6, 7, 8, 9, 10].map((h) => (
+                      <button
+                        key={h}
+                        type="button"
+                        onClick={() => setWorkHours(h)}
+                        className={cn(
+                          "min-w-[2.5rem] px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors",
+                          workHours === h
+                            ? "bg-slate-600 text-white"
+                            : "bg-muted text-foreground hover:bg-muted/80"
+                        )}
+                      >
+                        {h}h
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-1">
+                {grund === "arbeit" && (
+                  <p className="text-xs font-semibold text-muted-foreground px-1">Lernzeit neben der Arbeit</p>
+                )}
+                <div className="flex flex-wrap justify-center gap-1.5">
+                  {HOUR_OPTIONS.map((h) => (
+                    <button
+                      key={h}
+                      type="button"
+                      onClick={() => setHours(h)}
+                      className={cn(
+                        "min-w-[2.5rem] px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors",
+                        hours === h
+                          ? "bg-primary text-white"
+                          : "bg-muted text-foreground hover:bg-muted/80"
+                      )}
+                    >
+                      {h}h
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="px-1">

@@ -165,8 +165,9 @@ export type DayGrund =
 
 export interface DayPlan {
   grund: string;
-  hours: number;
-  workStart?: string; // "HH:MM", default "08:00"
+  hours: number;       // Lernstunden (für arbeit: Lernzeit neben der Arbeit)
+  workStart?: string;  // "HH:MM" – Beginn des Arbeitsblockes (nur arbeit)
+  workHours?: number;  // Dauer des Arbeitsblockes in h (nur arbeit, default 8)
 }
 
 export interface CustomDayGrund {

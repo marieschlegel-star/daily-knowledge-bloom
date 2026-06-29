@@ -83,15 +83,16 @@ export function CalendarViewComponent({
       });
 
       // Timed work block for "arbeit" plans
-      if (plan.grund === "arbeit" && plan.hours > 0) {
+      if (plan.grund === "arbeit") {
         const workStart = plan.workStart ?? "08:00";
-        const [h, m] = workStart.split(":").map(Number);
+        const blockHours = plan.workHours ?? 8;
         const start = new Date(`${dateStr}T${workStart}:00`);
-        const end = new Date(start.getTime() + plan.hours * 3600000);
+        const end = new Date(start.getTime() + blockHours * 3600000);
         const endStr = `${String(end.getHours()).padStart(2, "0")}:${String(end.getMinutes()).padStart(2, "0")}`;
+        const learnLabel = plan.hours > 0 ? ` · ${plan.hours}h Lernen` : "";
         events.push({
           id: `workblock-${dateStr}`,
-          title: `🏛 Arbeit ${workStart}–${endStr}`,
+          title: `🏛 Arbeit ${workStart}–${endStr}${learnLabel}`,
           start: `${dateStr}T${workStart}:00`,
           end: end.toISOString(),
           backgroundColor: "rgba(203,213,225,0.45)",
@@ -236,7 +237,7 @@ export function CalendarViewComponent({
               </span>
               {plan && cfg ? (
                 <span className="text-meta font-medium leading-tight text-center px-0.5" style={{ color: cfg.color }}>
-                  {formatDayPlanLabel(plan.grund, plan.hours, customGrunds)}
+                  {formatDayPlanLabel(plan.grund, plan.hours, customGrunds, plan.workHours)}
                 </span>
               ) : (
                 <span className="text-meta text-transparent group-hover:text-muted-foreground transition-colors">
@@ -287,8 +288,8 @@ export function CalendarViewComponent({
           if (!info.event.start || !info.event.end) { info.revert(); return; }
           if (type === "workblock" && dateStr) {
             const newStart = `${String(info.event.start.getHours()).padStart(2,"0")}:${String(info.event.start.getMinutes()).padStart(2,"0")}`;
-            const hours = (info.event.end.getTime() - info.event.start.getTime()) / 3600000;
-            onWorkBlockChange?.(dateStr, newStart, Math.round(hours * 4) / 4);
+            const newWorkHours = Math.round(((info.event.end.getTime() - info.event.start.getTime()) / 3600000) * 4) / 4;
+            onWorkBlockChange?.(dateStr, newStart, newWorkHours);
           } else if (sessionId) {
             onSessionResize(sessionId, durationHoursFromRange(info.event.start, info.event.end, 5));
           } else {

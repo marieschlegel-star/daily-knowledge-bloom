@@ -225,10 +225,11 @@ function HomePage() {
   );
 
   const handleWorkBlockChange = useCallback(
-    (dateStr: string, workStart: string, hours: number) => {
+    (dateStr: string, workStart: string, workHours: number) => {
       const current = useDayStore.getState().dayPlans[dateStr];
       if (!current) return;
-      useDayStore.getState().setDayPlan(dateStr, { ...current, workStart, hours });
+      // workHours = Dauer des Arbeitsblockes; hours bleibt Lernzeit (unverändert)
+      useDayStore.getState().setDayPlan(dateStr, { ...current, workStart, workHours });
     },
     []
   );

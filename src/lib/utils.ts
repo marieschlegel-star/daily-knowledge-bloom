@@ -72,15 +72,27 @@ export function priorityColor(priority: string | null): string {
 export function formatDayPlanLabel(
   grundId: string,
   hours: number,
-  customGrunds: CustomDayGrund[] = []
+  customGrunds: CustomDayGrund[] = [],
+  workHours?: number
 ): string {
   const cfg = resolveGrundConfig(grundId, customGrunds);
   if (!cfg) return hours > 0 ? `${hours} h` : "Geplant";
+  if (grundId === "arbeit") {
+    const wh = workHours ?? 8;
+    return hours > 0
+      ? `${cfg.emoji} ${wh}h Arbeit · ${hours}h Lernen`
+      : `${cfg.emoji} ${wh}h Arbeit`;
+  }
   if (hours > 0) return `${cfg.emoji} ${cfg.label} · ${hours} h`;
   return `${cfg.emoji} ${cfg.label}`;
 }
 
-export function formatDayPlanHoursLabel(hours: number): string {
+export function formatDayPlanHoursLabel(hours: number, grundId?: string): string {
+  if (grundId === "arbeit") {
+    if (hours === 0) return "Keine Lernzeit eingeplant";
+    if (hours === 1) return "1 h Lernzeit neben der Arbeit";
+    return `${hours} h Lernzeit neben der Arbeit`;
+  }
   if (hours === 1) return "1 Stunde Lernen";
   return `${hours} Stunden Lernen`;
 }
