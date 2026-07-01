@@ -42,6 +42,8 @@ interface PomodoroTimerProps {
   onClose?: () => void;
   /** True = renders as full-page layout, false = panel overlay (default) */
   fullPage?: boolean;
+  /** Kompaktes Layout für Notion-Embeds (kleinerer Ring, weniger Abstände) */
+  compact?: boolean;
 }
 
 // ─── Component ───────────────────────────────────────────────────────
@@ -50,6 +52,7 @@ export function PomodoroTimer({
   sessions = [],
   onClose,
   fullPage = false,
+  compact = false,
 }: PomodoroTimerProps) {
   const [settings, setSettings]                 = useState(DEFAULT_SETTINGS);
   const [showSettings, setShowSettings]         = useState(false);
@@ -96,6 +99,16 @@ export function PomodoroTimer({
       if (found) setSelectedSession(found);
     }
   }, [sessions, selectedSession]);
+
+  // initialSession kommt asynchron (Embed: Sessions laden erst) – nachziehen,
+  // solange kein Timer mit anderer Auswahl läuft
+  useEffect(() => {
+    if (initialSession && !hasActiveSession(stateRef.current)) {
+      setSelectedSession(initialSession);
+      setShowSonstigesMode(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSession?.id]);
 
   // ── Tick ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -258,7 +271,8 @@ export function PomodoroTimer({
     ? Math.max(0, Math.min(1, 1 - secondsLeft / total))
     : (secondsLeft % 3600) / 3600;
 
-  const R = 100;
+  const SIZE = compact ? 180 : 240;
+  const R = compact ? 74 : 100;
   const CIRC = 2 * Math.PI * R;
   const dashOffset = CIRC * (1 - pct);
 
@@ -289,12 +303,12 @@ export function PomodoroTimer({
 
   // ── Layout ────────────────────────────────────────────────────────
   const inner = (
-    <div className={cn("flex flex-col", fullPage ? "max-w-md mx-auto w-full py-8 px-5" : "flex-1 overflow-y-auto px-4 py-4")}>
+    <div className={cn("flex flex-col", fullPage ? cn("max-w-md mx-auto w-full px-5", compact ? "py-4" : "py-8") : "flex-1 overflow-y-auto px-4 py-4")}>
       {/* Header row */}
       <div className="flex items-start justify-between mb-5">
         <div>
           <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{getGreeting()}</p>
-          <h1 className={cn("font-semibold text-foreground mt-0.5", fullPage ? "text-3xl" : "text-xl")}>Fokus-Timer</h1>
+          <h1 className={cn("font-semibold text-foreground mt-0.5", compact ? "text-xl" : fullPage ? "text-3xl" : "text-xl")}>Fokus-Timer</h1>
           <p className="mt-0.5 text-xs text-muted-foreground">Heute: {todayMin} Min</p>
         </div>
         <button
@@ -423,13 +437,13 @@ export function PomodoroTimer({
 
       {/* Ring timer */}
       <div className="flex flex-col items-center mb-5">
-        <div className="relative" style={{ width: 240, height: 240 }}>
-          <svg width={240} height={240} viewBox="0 0 240 240" className="-rotate-90">
+        <div className="relative" style={{ width: SIZE, height: SIZE }}>
+          <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} className="-rotate-90">
             {/* Track */}
-            <circle cx={120} cy={120} r={R} fill="none" stroke="#e2e8f0" strokeWidth={10} />
+            <circle cx={SIZE / 2} cy={SIZE / 2} r={R} fill="none" stroke="#e2e8f0" strokeWidth={10} />
             {/* Fill */}
             <circle
-              cx={120} cy={120} r={R} fill="none"
+              cx={SIZE / 2} cy={SIZE / 2} r={R} fill="none"
               stroke={accent} strokeWidth={10}
               strokeLinecap="round"
               strokeDasharray={CIRC}
@@ -438,7 +452,7 @@ export function PomodoroTimer({
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-5xl font-black tabular-nums tracking-tight leading-none" style={{ color: accent }}>
+            <span className={cn("font-black tabular-nums tracking-tight leading-none", compact ? "text-4xl" : "text-5xl")} style={{ color: accent }}>
               {fmt2(minutes)}:{fmt2(seconds)}
             </span>
             <span className="text-[11px] font-semibold text-violet-600 mt-1">
@@ -453,13 +467,13 @@ export function PomodoroTimer({
         {/* Play/Pause */}
         <button
           onClick={toggleTimer}
-          className="w-20 h-20 rounded-3xl flex items-center justify-center shadow-lg active:scale-95 transition-all"
+          className={cn("rounded-3xl flex items-center justify-center shadow-lg active:scale-95 transition-all", compact ? "w-16 h-16" : "w-20 h-20")}
           style={{ background: accent }}
           title={isRunning ? "Pause (Space)" : "Starten (Space)"}
         >
           {isRunning
-            ? <Pause className="h-9 w-9 text-white" fill="white" />
-            : <Play  className="h-9 w-9 text-white ml-1" fill="white" />
+            ? <Pause className={cn("text-white", compact ? "h-7 w-7" : "h-9 w-9")} fill="white" />
+            : <Play  className={cn("text-white ml-1", compact ? "h-7 w-7" : "h-9 w-9")} fill="white" />
           }
         </button>
         {/* Stop & save */}
@@ -474,10 +488,12 @@ export function PomodoroTimer({
       </div>
 
       {/* Keyboard hint */}
-      <div className="flex justify-center gap-4">
-        <Hint k="Space" label="Play/Pause" />
-        <Hint k="R" label="Reset" />
-      </div>
+      {!compact && (
+        <div className="flex justify-center gap-4">
+          <Hint k="Space" label="Play/Pause" />
+          <Hint k="R" label="Reset" />
+        </div>
+      )}
     </div>
   );
 

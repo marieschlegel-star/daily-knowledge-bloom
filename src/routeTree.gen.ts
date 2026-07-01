@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TodosRouteImport } from './routes/todos'
+import { Route as TimerRouteImport } from './routes/timer'
 import { Route as StaatsexamenRouteImport } from './routes/staatsexamen'
 import { Route as FokusRouteImport } from './routes/fokus'
 import { Route as IndexRouteImport } from './routes/index'
@@ -25,6 +26,11 @@ import { Route as ApiAiChatRouteImport } from './routes/api/ai/chat'
 const TodosRoute = TodosRouteImport.update({
   id: '/todos',
   path: '/todos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TimerRoute = TimerRouteImport.update({
+  id: '/timer',
+  path: '/timer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StaatsexamenRoute = StaatsexamenRouteImport.update({
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/fokus': typeof FokusRoute
   '/staatsexamen': typeof StaatsexamenRoute
+  '/timer': typeof TimerRoute
   '/todos': typeof TodosRoute
   '/api/ai/chat': typeof ApiAiChatRoute
   '/api/google/calendars': typeof ApiGoogleCalendarsRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/fokus': typeof FokusRoute
   '/staatsexamen': typeof StaatsexamenRoute
+  '/timer': typeof TimerRoute
   '/todos': typeof TodosRoute
   '/api/ai/chat': typeof ApiAiChatRoute
   '/api/google/calendars': typeof ApiGoogleCalendarsRoute
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/fokus': typeof FokusRoute
   '/staatsexamen': typeof StaatsexamenRoute
+  '/timer': typeof TimerRoute
   '/todos': typeof TodosRoute
   '/api/ai/chat': typeof ApiAiChatRoute
   '/api/google/calendars': typeof ApiGoogleCalendarsRoute
@@ -132,6 +141,7 @@ export interface FileRouteTypes {
     | '/'
     | '/fokus'
     | '/staatsexamen'
+    | '/timer'
     | '/todos'
     | '/api/ai/chat'
     | '/api/google/calendars'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/'
     | '/fokus'
     | '/staatsexamen'
+    | '/timer'
     | '/todos'
     | '/api/ai/chat'
     | '/api/google/calendars'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/'
     | '/fokus'
     | '/staatsexamen'
+    | '/timer'
     | '/todos'
     | '/api/ai/chat'
     | '/api/google/calendars'
@@ -175,6 +187,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   FokusRoute: typeof FokusRoute
   StaatsexamenRoute: typeof StaatsexamenRoute
+  TimerRoute: typeof TimerRoute
   TodosRoute: typeof TodosRoute
   ApiAiChatRoute: typeof ApiAiChatRoute
   ApiGoogleCalendarsRoute: typeof ApiGoogleCalendarsRoute
@@ -193,6 +206,13 @@ declare module '@tanstack/react-router' {
       path: '/todos'
       fullPath: '/todos'
       preLoaderRoute: typeof TodosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/timer': {
+      id: '/timer'
+      path: '/timer'
+      fullPath: '/timer'
+      preLoaderRoute: typeof TimerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/staatsexamen': {
@@ -279,6 +299,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   FokusRoute: FokusRoute,
   StaatsexamenRoute: StaatsexamenRoute,
+  TimerRoute: TimerRoute,
   TodosRoute: TodosRoute,
   ApiAiChatRoute: ApiAiChatRoute,
   ApiGoogleCalendarsRoute: ApiGoogleCalendarsRoute,
@@ -292,3 +313,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

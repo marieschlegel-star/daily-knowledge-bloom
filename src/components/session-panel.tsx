@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { X, Brain, HelpCircle, List, CreditCard, PenLine, Calendar, ExternalLink, FileText, Loader2, Timer, CalendarOff } from "lucide-react";
 import { PomodoroTimer } from "./pomodoro-timer";
 import { cn, daysUntil, countdownLabel, getFachColors, formatDuration, priorityDot } from "@/lib/utils";
@@ -119,6 +120,19 @@ export function SessionPanel({ session, klausuren, pomodoros, onClose, onClearDa
           <span className="text-sm font-semibold text-foreground truncate">{session.title}</span>
         </div>
         <div className="flex items-center gap-1 shrink-0">
+          <button
+            onClick={() => {
+              const url = `${window.location.origin}/timer?session=${session.id}`;
+              navigator.clipboard.writeText(url);
+              toast.success("Embed-Link kopiert", {
+                description: "In Notion einfügen und „Einbetten“ wählen",
+              });
+            }}
+            title="Timer-Embed-Link für Notion kopieren"
+            className="p-1 rounded hover:bg-violet-50 text-muted-foreground hover:text-violet-600 transition-colors"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+          </button>
           <button
             onClick={() => setShowPomodoro(true)}
             title="Pomodoro-Timer starten"
