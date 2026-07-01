@@ -6,6 +6,7 @@ import { FachChip } from "./fach-chip";
 import TimerSettingsModal from "./timer-settings-modal";
 import {
   DEFAULT_SETTINGS,
+  TIMER_STATE_KEY,
   appendPomoLog,
   computeDisplaySeconds,
   computeElapsedMinutes,
@@ -121,6 +122,30 @@ export function PomodoroTimer({
     }, 1000);
     return () => clearInterval(id);
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Cross-Tab/Embed-Sync ──────────────────────────────────────────
+  // Ändert ein anderes Fenster/Notion-Embed den Timer (Play/Pause/Stop),
+  // feuert dort ein storage-Event – hier Zustand nachladen.
+  useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key !== TIMER_STATE_KEY) return;
+      const saved = loadTimerState();
+      stateRef.current = saved;
+      setHasActive(hasActiveSession(saved));
+      if (saved) {
+        setTimerType(saved.timerType);
+        setIsRunning(saved.isRunning);
+        setSecondsLeft(computeDisplaySeconds(saved));
+        setShowSonstigesMode(saved.sonstigesMode);
+        setSelectedCategory(saved.category);
+      } else {
+        setIsRunning(false);
+        setSecondsLeft(loadSettings().focusMinutes * 60);
+      }
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
   }, []);
 
   // ── Browser tab title ─────────────────────────────────────────────
