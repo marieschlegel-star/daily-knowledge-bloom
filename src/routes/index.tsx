@@ -321,6 +321,30 @@ function HomePage() {
       const dateStr = toLocalISO(payload.slotDate);
       const duration = payload.duration;
 
+      // Bestehende Notion-Einheit gewählt → nur terminieren, kein Duplikat anlegen
+      if (payload.type === "lerneinheit" && payload.existingSessionId) {
+        const id = payload.existingSessionId;
+        try {
+          if (isNotionPageId(id)) {
+            await notionWrite("/api/notion/sessions", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id, date: dateStr, duration }),
+            });
+          }
+          qc.setQueryData<LernSession[]>(["sessions"], (old) =>
+            old?.map((s) => (s.id === id ? { ...s, date: dateStr, duration } : s)) ?? []
+          );
+          if (isNotionPageId(id)) qc.invalidateQueries({ queryKey: ["sessions"] });
+        } catch (error: any) {
+          return { ok: false, error: error.message ?? "Einheit konnte nicht eingeplant werden." };
+        }
+        if (!filters.faecher.includes(payload.subject)) {
+          toggleFach(payload.subject);
+        }
+        return { ok: true };
+      }
+
       try {
         const result = await notionWrite("/api/notion/sessions", {
           method: "POST",

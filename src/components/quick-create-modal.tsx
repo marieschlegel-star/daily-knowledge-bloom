@@ -18,6 +18,7 @@ export type QuickCreatePayload =
       slotDate: Date;
       subject: Fach;
       duration: number;
+      existingSessionId?: string; // gesetzt, wenn eine Notion-Einheit gewählt wurde → terminieren statt neu anlegen
     }
   | {
       type: "todo";
@@ -67,6 +68,7 @@ export function QuickCreateModal({ date, allDay, calendarView, prefill, sessions
   const [fach, setFach] = useState<Fach>(prefill?.subject ?? "ZPO");
   const [sessionSearch, setSessionSearch] = useState("");
   const [showSessionList, setShowSessionList] = useState(false);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [duration, setDuration] = useState(1);
   const [kategorie, setKategorie] = useState<TodoKategorie>("Lernen");
   const [time, setTime] = useState(format(date, "HH:mm"));
@@ -107,6 +109,7 @@ export function QuickCreateModal({ date, allDay, calendarView, prefill, sessions
             slotDate,
             subject: fach,
             duration: type === "termin" ? 1 : duration,
+            existingSessionId: type === "lerneinheit" ? selectedSessionId ?? undefined : undefined,
           };
 
     try {
@@ -172,7 +175,7 @@ export function QuickCreateModal({ date, allDay, calendarView, prefill, sessions
                 onClick={() => setShowSessionList((v) => !v)}
                 className="w-full flex items-center justify-between px-3 py-2 rounded-xl border border-border bg-slate-50 hover:bg-white text-xs text-muted-foreground transition-all"
               >
-                <span>Aus Notion wählen…</span>
+                <span>{selectedSessionId ? "✓ Notion-Einheit wird eingeplant" : "Aus Notion wählen…"}</span>
                 <ChevronDown className={`h-3 w-3 transition-transform ${showSessionList ? "rotate-180" : ""}`} />
               </button>
               {showSessionList && (
@@ -203,6 +206,8 @@ export function QuickCreateModal({ date, allDay, calendarView, prefill, sessions
                               e.preventDefault();
                               setTitle(s.title);
                               setFach(s.subject);
+                              setSelectedSessionId(s.id);
+                              if (s.duration > 0) setDuration(s.duration);
                               setShowSessionList(false);
                               setSessionSearch("");
                             }}
@@ -226,7 +231,7 @@ export function QuickCreateModal({ date, allDay, calendarView, prefill, sessions
           <input
             ref={inputRef}
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => { setTitle(e.target.value); setSelectedSessionId(null); }}
             placeholder={
               type === "lerneinheit" ? "Thema / Stoff..."
               : type === "todo" ? "Aufgabe..."

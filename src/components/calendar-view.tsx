@@ -267,6 +267,8 @@ export function CalendarViewComponent({
           const { type, sessionId, todoId, dateStr } = info.event.extendedProps ?? {};
           if (!info.event.start) { info.revert(); return; }
           if (type === "workblock" && dateStr) {
+            // Arbeitsblock gehört zum Tagesplan – Verschieben auf anderen Tag nicht erlaubt
+            if (format(info.event.start, "yyyy-MM-dd") !== dateStr) { info.revert(); return; }
             const newStart = `${String(info.event.start.getHours()).padStart(2,"0")}:${String(info.event.start.getMinutes()).padStart(2,"0")}`;
             const hours = info.event.end
               ? (info.event.end.getTime() - info.event.start.getTime()) / 3600000
@@ -297,9 +299,14 @@ export function CalendarViewComponent({
           }
         }}
         eventReceive={(info: EventReceiveArg) => {
-          const { type, sessionId, subject, thema } = info.event.extendedProps ?? {};
-          if (type === "session" && sessionId) {
-            onSessionDrop(sessionId, toLocalISO(info.event.start!));
+          const { type, sessionId, todoId, subject, thema } = info.event.extendedProps ?? {};
+          if (type === "session" && sessionId && info.event.start) {
+            onSessionDrop(sessionId, toLocalISO(info.event.start));
+          } else if (type === "todo" && todoId && info.event.start) {
+            const newDate = info.event.allDay
+              ? info.event.startStr.slice(0, 10)
+              : toLocalISO(info.event.start);
+            onTodoDrop?.(todoId, newDate);
           } else if (type === "new-theme" && info.event.start) {
             onThemeDrop?.(subject, thema, info.event.start);
           }

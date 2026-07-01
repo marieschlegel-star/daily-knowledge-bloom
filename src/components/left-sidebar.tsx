@@ -77,7 +77,7 @@ export function LeftSidebar({ sessions, todos }: LeftSidebarProps) {
 
   const openSessions = sessions.filter((s) => !s.completed).sort(sortByTitle);
   const filteredSessions = activeFaecher.length === 0
-    ? []
+    ? openSessions
     : openSessions.filter((s) => activeFaecher.includes(s.subject));
 
   const filteredTodos = activeKategorien.length === 0
@@ -239,7 +239,7 @@ export function LeftSidebar({ sessions, todos }: LeftSidebarProps) {
               {filteredSessions.map((s) => (
                 <SessionChip key={s.id} session={s} />
               ))}
-              {activeFaecher.length > 0 && filteredSessions.length === 0 && (
+              {filteredSessions.length === 0 && (
                 <p className="text-label text-muted-foreground px-1 py-1">Keine offenen Einheiten</p>
               )}
             </div>
@@ -342,7 +342,7 @@ function TodoChip({ todo }: { todo: Todo }) {
 
   const eventData = JSON.stringify({
     title: `· ${todo.name}`,
-    allDay: true,
+    duration: "01:00",
     backgroundColor: bg,
     borderColor: bg,
     textColor: text,
